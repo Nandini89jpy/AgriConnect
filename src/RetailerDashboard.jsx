@@ -19,6 +19,7 @@ import {
   UserRound
 } from "lucide-react";
 import "./RetailerDashboard.css";
+import { supabase } from "./lib/supabaseClient";
 
 const initialRequest = {
   cropName: "",
@@ -115,30 +116,105 @@ const [profile, setProfile] = useState(() => {
     setShowRequestForm(true);
   };
 
-  const submitRequest = (event) => {
-    event.preventDefault();
+  const submitRequest = async (event) => {
+  event.preventDefault();
 
-    const newRequest = {
-      ...request,
-      id: Date.now(),
-      quantity: Number(request.quantity),
-      targetPrice: Number(request.targetPrice),
-      status: "Submitted",
-    };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-    addRequest(newRequest);
-    setShowRequestForm(false);
+  if (!user) {
     setSuccessMessage(
-      `Your request for ${newRequest.quantity} kg of ${newRequest.cropName} has been recorded.`
+      "Your login session has expired. Please log in again."
     );
-    setRequest(initialRequest);
-  };
+    return;
+  }
 
-  const totalAvailable = crops.reduce(
-    (total, crop) => total + crop.quantity,
-    0
+  const cropName = request.cropName.trim();
+  const quantity = Number(request.quantity);
+  const targetPrice = Number(request.targetPrice);
+
+  // Basic validation
+  if (!cropName) {
+    setSuccessMessage("Please enter the crop you need.");
+    return;
+  }
+
+  if (quantity <= 0) {
+    setSuccessMessage("Please enter a valid quantity.");
+    return;
+  }
+
+  if (targetPrice <= 0) {
+    setSuccessMessage("Please enter a valid target price.");
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from("purchase_requests")
+    .insert({
+      retailer_id: user.id,
+
+      // If retailer selected a farmer's crop,
+      // connect the request to that crop.
+      // Otherwise this remains null for a general requirement.
+      crop_id: selectedCrop?.id || null,
+
+      quantity: quantity,
+
+      target_price: targetPrice,
+
+      status: "pending",
+
+      notes: request.notes || null,
+
+      requested_crop: cropName,
+
+      buyer_name: request.buyerName || null,
+
+      location: request.location || null,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Purchase request error:", error);
+
+    setSuccessMessage(
+      "Could not post your requirement. Please try again."
+    );
+
+    return;
+  }
+
+  // Add the request immediately to the dashboard
+  // so the retailer sees it without refreshing.
+  addRequest({
+    id: data.id,
+    cropId: data.crop_id,
+    cropName: data.requested_crop,
+    quantity: Number(data.quantity),
+    targetPrice: Number(data.target_price),
+    status: "Pending",
+    retailerId: data.retailer_id,
+    retailerName: data.buyer_name,
+    location: data.location || "",
+    notes: data.notes || "",
+  });
+
+  setShowRequestForm(false);
+
+  setSuccessMessage(
+    `Your requirement for ${quantity} kg of ${cropName} has been posted for farmers.`
   );
 
+  setRequest(initialRequest);
+  setSelectedCrop(null);
+};
+const totalAvailable = crops.reduce(
+  (total, crop) => total + crop.quantity,
+  0
+);
   return (
     <div className="retailer-dashboard">
       

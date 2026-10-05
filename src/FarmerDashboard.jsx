@@ -4,22 +4,41 @@ import { useMemo, useState } from "react";
 import {
   ArrowLeft, Sprout, Plus, MapPin, IndianRupee,
   Clock, Package, TrendingUp, Search, X ,
-  Settings, UserRound
+  Settings, UserRound , Check
 } from "lucide-react";
 import "./FarmerDashboard.css";
 
 
 const today = new Date().toISOString().slice(0, 10);
 
+  function getUrgency(harvestDate) {
+  const age = Math.floor(
+    (new Date(today) - new Date(harvestDate)) / 86400000
+  );
+
+  if (age >= 2) {
+    return { label: "High priority", type: "urgent" };
+  }
+
+  if (age >= 1) {
+    return { label: "Needs attention", type: "warning" };
+  }
+
+  return { label: "Fresh harvest", type: "fresh" };
+}
+
+
 function FarmerDashboard({ 
     onBack  ,
      crops ,
       addCrop , 
       requests = [] ,
+      onRequestStatusChange,
      }) {
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [notice, setNotice] = useState("");
+  const [activeDemandTab, setActiveDemandTab] = useState("requests");
   const [showGrainGuardian, setShowGrainGuardian] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 const [selectedLanguage, setSelectedLanguage] = useState(
@@ -66,55 +85,63 @@ const [profileSaved, setProfileSaved] = useState(false);
     ),
     [crops, search]
   );
+const retailerRequests = requests.filter(
+  (item) => item.cropId
+);
 
+const retailerRequirements = requests.filter(
+  (item) => !item.cropId
+);
   function updateField(event) {
     setForm({ ...form, [event.target.name]: event.target.value });
   }
 
-  function handleAddCrop(event) {
-    event.preventDefault();
+  async function handleAddCrop(event) {
+  event.preventDefault();
 
-    const quantity = Number(form.quantity);
-    const price = Number(form.price);
-    const transport = Number(form.transport);
+  const quantity = Number(form.quantity);
+  const price = Number(form.price);
+  const transport = Number(form.transport);
 
-    if (quantity <= 0 || price <= 0 || transport < 0) {
-      setNotice("Enter a valid quantity, price and transport cost.");
-      return;
-    }
-
-    addCrop({
-        crop: form.crop,
-        quantity,
-        price,
-        transport,
-        transportCost: transport,
-        location: form.harvestDate,
-        status: "Available",
-});
-
-    setForm({
-      crop: "",
-      quantity: "",
-      price: "",
-      transport: "",
-      location: "",
-      harvestDate: today,
-    });
-    setShowForm(false);
-    setNotice("Crop listing added successfully!");
+  if (!form.crop || !form.location) {
+    setNotice("Please enter crop name and pickup location.");
+    return;
   }
 
-  function getUrgency(harvestDate) {
-    const age = Math.floor(
-      (new Date(today) - new Date(harvestDate)) / 86400000
-    );
-
-    if (age >= 2) return { label: "High priority", type: "urgent" };
-    if (age >= 1) return { label: "Needs attention", type: "warning" };
-    return { label: "Fresh harvest", type: "fresh" };
+  if (quantity <= 0 || price <= 0 || transport < 0) {
+    setNotice("Enter a valid quantity, price and transport cost.");
+    return;
   }
 
+  const result = await addCrop({
+    crop: form.crop,
+    quantity,
+    price,
+    transport,
+    transportCost: transport,
+    location: form.location,
+    harvestDate: form.harvestDate,
+    status: "Available",
+  });
+
+  if (result?.error) {
+    console.error("Crop save error:", result.error);
+    setNotice("Could not save crop. Please try again.");
+    return;
+  }
+
+  setForm({
+    crop: "",
+    quantity: "",
+    price: "",
+    transport: "",
+    location: "",
+    harvestDate: today,
+  });
+
+  setShowForm(false);
+  setNotice("Crop listing added successfully!");
+}
   return (
     <div className="farmer-app">
       <header className="farmer-nav">
@@ -257,93 +284,334 @@ const [profileSaved, setProfileSaved] = useState(false);
             Urgency is based on harvest date only; crop-specific shelf life is not yet modelled.
           </p>
         </section>
-        <section className="retailer-demands">
+       <section className="retailer-demands">
+
   <div className="demands-header">
     <div>
       <span className="section-eyebrow">MARKETPLACE</span>
-      <h2>Retailer Demands</h2>
-      <p>Discover what retailers need and find your next buyer.</p>
-    </div>
-
-    <div className="demand-count">
-      <span>{requests.length}</span>
-      <small>Active requests</small>
+      <h2>Retailer Activity</h2>
+      <p>
+        Manage retailer requests and discover new buying requirements.
+      </p>
     </div>
   </div>
 
-  {requests.length > 0 ? (
-    <div className="demand-grid">
-      {requests.map((item) => (
-        <article className="demand-card" key={item.id}>
-          <div className="demand-card-header">
-            <div className="demand-crop-icon">🌾</div>
-            <span className="demand-status">
-              {item.status || "Submitted"}
-            </span>
-          </div>
+  {/* DEMAND TABS */}
+  <div className="demand-tabs">
 
-          <h3>
-            {item.cropName || item.name || "Crop request"}
-          </h3>
+    <button
+      type="button"
+      className={`demand-tab ${
+        activeDemandTab === "requests" ? "active" : ""
+      }`}
+      onClick={() => setActiveDemandTab("requests")}
+    >
+      <span className="demand-tab-icon">📨</span>
 
-          <p className="demand-subtitle">
-            Retailer purchase requirement
+      <span className="demand-tab-content">
+        <strong>Requests</strong>
+        <small>
+          {retailerRequests.length} requests
+        </small>
+      </span>
+    </button>
+
+    <button
+      type="button"
+      className={`demand-tab ${
+        activeDemandTab === "requirements" ? "active" : ""
+      }`}
+      onClick={() => setActiveDemandTab("requirements")}
+    >
+      <span className="demand-tab-icon">📋</span>
+
+      <span className="demand-tab-content">
+        <strong>Retailer Requirements</strong>
+        <small>
+          {retailerRequirements.length} requirements
+        </small>
+      </span>
+    </button>
+
+  </div>
+
+
+  {/* REQUESTS */}
+  {activeDemandTab === "requests" && (
+    <div className="demand-content">
+
+      <div className="demand-section-title">
+        <div>
+          <h3>Purchase Requests</h3>
+          <p>
+            Requests from retailers interested in your listed crops.
           </p>
+        </div>
+      </div>
 
-          <div className="demand-info-grid">
-            <div className="demand-info">
-              <span>Required quantity</span>
-              <strong>
-                {Number(item.quantity || 0).toLocaleString("en-IN")} kg
-              </strong>
-            </div>
+      {retailerRequests.length > 0 ? (
+        <div className="demand-grid">
 
-            <div className="demand-info">
-              <span>Target price</span>
-              <strong>
-                ₹{Number(item.targetPrice || 0).toLocaleString("en-IN")}
-                <small>/kg</small>
-              </strong>
-            </div>
-          </div>
+          {retailerRequests.map((item) => (
+            <article className="demand-card" key={item.id}>
 
-          <div className="demand-divider" />
+              <div className="demand-card-header">
+                <div className="demand-crop-icon">🌾</div>
 
-          <div className="demand-retailer">
-            <div className="retailer-avatar">
-              {(item.retailerName || item.retailer || "R")
-                .charAt(0)
-                .toUpperCase()}
-            </div>
+                <span className="demand-status">
+                  {item.status || "Pending"}
+                </span>
+              </div>
 
-            <div>
-              <span>Requested by</span>
-              <strong>
-                {item.retailerName || item.retailer || "Retailer"}
-              </strong>
-            </div>
-          </div>
+              <h3>
+                {item.cropName || item.name || "Crop request"}
+              </h3>
 
-          <div className="demand-location">
-            <span>📍</span>
-            {item.location || "Location not specified"}
-          </div>
-        </article>
-      ))}
-    </div>
-  ) : (
-    <div className="demands-empty">
-      <div className="empty-icon">📋</div>
-      <h3>No retailer demands yet</h3>
-      <p>
-        New buying requirements from retailers will appear here.
-        Check back soon for opportunities to sell your crops.
-      </p>
+              <p className="demand-subtitle">
+                Retailer is interested in your crop
+              </p>
+
+              <div className="demand-info-grid">
+
+                <div className="demand-info">
+                  <span>Required quantity</span>
+                  <strong>
+                    {Number(item.quantity || 0).toLocaleString("en-IN")} kg
+                  </strong>
+                </div>
+
+                <div className="demand-info">
+                  <span>Target price</span>
+                  <strong>
+                    ₹{Number(item.targetPrice || 0).toLocaleString("en-IN")}
+                    <small>/kg</small>
+                  </strong>
+                </div>
+
+              </div>
+
+              <div className="demand-divider" />
+
+              <div className="demand-retailer">
+
+                <div className="retailer-avatar">
+                  {(item.retailerName || "R")
+                    .charAt(0)
+                    .toUpperCase()}
+                </div>
+
+                <div>
+                  <span>Requested by</span>
+
+                  <strong>
+                    {item.retailerName || "Retailer"}
+                  </strong>
+                </div>
+
+              </div>
+
+              <div className="demand-location">
+                <span>📍</span>
+                {item.location || "Location not specified"}
+              </div>
+
+              {item.status === "Pending" && (
+                <div className="demand-actions">
+
+                  <button
+                    className="demand-accept-btn"
+                    onClick={() =>
+                      onRequestStatusChange(
+                        item.id,
+                        "accepted"
+                      )
+                    }
+                  >
+                    <Check size={17} />
+                    <span>Accept Request</span>
+                  </button>
+
+                  <button
+                    className="demand-reject-btn"
+                    onClick={() =>
+                      onRequestStatusChange(
+                        item.id,
+                        "rejected"
+                      )
+                    }
+                  >
+                    <X size={17} />
+                    <span>Reject</span>
+                  </button>
+
+                </div>
+              )}
+
+            </article>
+          ))}
+
+        </div>
+      ) : (
+
+        <div className="demands-empty">
+          <div className="empty-icon">📨</div>
+
+          <h3>No purchase requests</h3>
+
+          <p>
+            When a retailer requests one of your listed crops,
+            the request will appear here.
+          </p>
+        </div>
+
+      )}
+
     </div>
   )}
-</section>
-                  
 
+
+  {/* GENERAL RETAILER REQUIREMENTS */}
+  {activeDemandTab === "requirements" && (
+    <div className="demand-content">
+
+      <div className="demand-section-title">
+        <div>
+          <h3>Retailer Requirements</h3>
+          <p>
+            Discover what retailers are currently looking to buy.
+          </p>
+        </div>
+      </div>
+
+      {retailerRequirements.length > 0 ? (
+        <div className="demand-grid">
+
+          {retailerRequirements.map((item) => (
+            <article className="demand-card" key={item.id}>
+
+              <div className="demand-card-header">
+
+                <div className="demand-crop-icon">
+                  📋
+                </div>
+
+                <span className="demand-status">
+                  {item.status || "Pending"}
+                </span>
+
+              </div>
+
+              <h3>
+                {item.cropName || "Crop requirement"}
+              </h3>
+
+              <p className="demand-subtitle">
+                Retailer is looking for this crop
+              </p>
+
+              <div className="demand-info-grid">
+
+                <div className="demand-info">
+                  <span>Required quantity</span>
+
+                  <strong>
+                    {Number(item.quantity || 0).toLocaleString("en-IN")} kg
+                  </strong>
+                </div>
+
+                <div className="demand-info">
+                  <span>Target price</span>
+
+                  <strong>
+                    ₹{Number(item.targetPrice || 0).toLocaleString("en-IN")}
+                    <small>/kg</small>
+                  </strong>
+                </div>
+
+              </div>
+
+              <div className="demand-divider" />
+
+              <div className="demand-retailer">
+
+                <div className="retailer-avatar">
+                  {(item.retailerName || "R")
+                    .charAt(0)
+                    .toUpperCase()}
+                </div>
+
+                <div>
+                  <span>Requirement posted by</span>
+
+                  <strong>
+                    {item.retailerName || "Retailer"}
+                  </strong>
+                </div>
+
+              </div>
+
+              <div className="demand-location">
+                <span>📍</span>
+                {item.location || "Location not specified"}
+              </div>
+
+              {item.status === "Pending" && (
+                <div className="demand-actions">
+
+                  <button
+                    className="demand-accept-btn"
+                    onClick={() =>
+                      onRequestStatusChange(
+                        item.id,
+                        "accepted"
+                      )
+                    }
+                  >
+                    <Check size={17} />
+                    <span>Accept Requirement</span>
+                  </button>
+
+                  <button
+                    className="demand-reject-btn"
+                    onClick={() =>
+                      onRequestStatusChange(
+                        item.id,
+                        "rejected"
+                      )
+                    }
+                  >
+                    <X size={17} />
+                    <span>Reject</span>
+                  </button>
+
+                </div>
+              )}
+
+            </article>
+          ))}
+
+        </div>
+      ) : (
+
+        <div className="demands-empty">
+
+          <div className="empty-icon">📋</div>
+
+          <h3>No retailer requirements</h3>
+
+          <p>
+            New requirements posted by retailers will
+            appear here.
+          </p>
+
+        </div>
+
+      )}
+
+    </div>
+  )}
+
+</section>
 
         {showForm && (
           <div className="farmer-modal-backdrop">

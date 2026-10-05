@@ -1,3 +1,4 @@
+import { supabase } from "./lib/supabaseClient";
 import Login from "./login";
 import ProfessionSelection from "./professionselection";
 import { useAgriData } from "./agriData";
@@ -46,17 +47,54 @@ const features = [
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [ activePage, setActivePage ] = useState("login");
-  const [loggedInEmail, setLoggedInEmail] =useState("");
-  const handleLogin = (email) => {
-  setLoggedInEmail(email);
+  const [loggedInUser, setLoggedInUser] =useState(null);
+  const handleLogin = (user) => {
+  setLoggedInUser(user);
   setActivePage("profession");
 };
 
 const handleLogout = () => {
-  setLoggedInEmail("");
+  setLoggedInUser(null);
   setActivePage("login");
 };
-  const { crops, requests, addCrop, addRequest } = useAgriData();
+const handleProfessionSelect = async (role) => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  console.log("Current session:", session);
+  console.log("Current user:", session?.user);
+
+  if (!session?.user) {
+    alert("Your login session has expired. Please log in again.");
+    return;
+  }
+
+  const user = session.user;
+
+  const { error } = await supabase
+    .from("profiles")
+    .upsert(
+      {
+        id: user.id,
+        full_name: user.email,
+        role: role,
+      },
+      {
+        onConflict: "id",
+      }
+    );
+
+  if (error) {
+    console.error("Profile save error:", error);
+    alert("Could not save your profession. Please try again.");
+    return;
+  }
+
+  setLoggedInUser(user);
+  setActivePage(role);
+};
+  const { crops, requests, addCrop, addRequest, updateRequestStatus } = useAgriData(loggedInUser);
 
   useEffect(() => {
   window.scrollTo({
@@ -75,7 +113,7 @@ if (activePage === "login") {
 if (activePage === "profession") {
   return (
     <ProfessionSelection
-      onSelect={(role) => setActivePage(role)}
+      onSelect={handleProfessionSelect}
       onLogout={handleLogout}
     />
   );
@@ -89,6 +127,7 @@ if (activePage === "farmer") {
       crops={crops}
       addCrop={addCrop}
       requests={requests}
+      onRequestStatusChange={updateRequestStatus}
     />
   );
 }
