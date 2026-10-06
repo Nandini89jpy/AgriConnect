@@ -1126,3 +1126,1306 @@
     font-size: 12px;
   }
 }
+/* =========================================================
+   BUYING REQUIREMENTS / MY ORDERS TABS
+   ========================================================= */
+
+.buying-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 22px;
+  margin-bottom: 28px;
+  padding: 6px;
+  background: #eef5ee;
+  border: 1px solid #d8e7d8;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(39, 93, 55, 0.06);
+}
+
+.buying-tab {
+  position: relative;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #657465;
+  padding: 11px 24px;
+  min-width: 145px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+  cursor: pointer;
+  transition:
+    background 0.25s ease,
+    color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.2s ease;
+}
+
+.buying-tab:hover {
+  color: #28643a;
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.buying-tab:active {
+  transform: scale(0.98);
+}
+
+.buying-tab.active {
+  background: #ffffff;
+  color: #216b38;
+  box-shadow: 0 4px 12px rgba(38, 91, 52, 0.14);
+}
+
+.buying-tab.active::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 5px;
+  width: 24px;
+  height: 3px;
+  transform: translateX(-50%);
+  background: #3c8c4d;
+  border-radius: 10px;
+}
+
+
+/* =========================================================
+   REQUIREMENTS PANEL
+   ========================================================= */
+
+.retailer-my-requests {
+  position: relative;
+  background: linear-gradient(
+    145deg,
+    #ffffff 0%,
+    #fbfdf9 100%
+  );
+  border: 1px solid #e1ebe0;
+  border-radius: 20px;
+  padding: 26px;
+  margin-top: 18px;
+  margin-bottom: 30px;
+  box-shadow: 0 8px 26px rgba(38, 91, 52, 0.07);
+  overflow: hidden;
+}
+
+.retailer-my-requests::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    #2f7d43,
+    #72a95f,
+    #b7c98d
+  );
+}
+
+.retailer-my-requests .retailer-section-heading h2 {
+  color: #214f2d;
+}
+
+.retailer-my-requests .retailer-section-heading p {
+  color: #718071;
+}
+
+
+/* Requirement cards/list */
+
+.retailer-request-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.retailer-request-row {
+  background: #ffffff;
+  border: 1px solid #e2ebe1;
+  border-radius: 14px;
+  padding: 17px 19px;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.retailer-request-row:hover {
+  transform: translateY(-2px);
+  border-color: #c9ddc9;
+  box-shadow: 0 8px 20px rgba(39, 93, 55, 0.08);
+}
+
+
+/* =========================================================
+   MY ORDERS PANEL
+   ========================================================= */
+
+.retailer-orders-section {
+  position: relative;
+  background: linear-gradient(
+    145deg,
+    #ffffff 0%,
+    #f9fcf8 100%
+  );
+  border: 1px solid #e1ebe0;
+  border-radius: 20px;
+  padding: 26px;
+  margin-top: 18px;
+  margin-bottom: 30px;
+  box-shadow: 0 8px 26px rgba(38, 91, 52, 0.07);
+  overflow: hidden;
+}
+
+.retailer-orders-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    #3b7f4c,
+    #6da65d,
+    #a9c884
+  );
+}
+
+.retailer-orders-section .section-heading h2 {
+  color: #214f2d;
+}
+
+.retailer-orders-section .section-heading p {
+  color: #718071;
+}
+
+
+/* Order cards */
+
+.retailer-orders-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(280px, 1fr)
+  );
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.retailer-order-card {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid #e0eae0;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 5px 16px rgba(38, 91, 52, 0.05);
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+    grid-template-columns: minmax(0, 1fr) 140px;
+}
+
+.retailer-order-card:hover {
+  transform: translateY(-3px);
+  border-color: #c6dbc6;
+  box-shadow: 0 12px 26px rgba(38, 91, 52, 0.10);
+}
+
+
+/* =========================================================
+   STATUS STYLING
+   ========================================================= */
+
+.retailer-order-card-top strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 6px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: #edf7ed;
+  color: #2c7040;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.retailer-order-card-top strong::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #55a363;
+}
+
+
+/* =========================================================
+   EMPTY STATES
+   ========================================================= */
+
+.empty-orders,
+.retailer-empty {
+  padding: 32px 20px;
+  text-align: center;
+  background: #f7faf6;
+  border: 1px dashed #cfddcc;
+  border-radius: 14px;
+  color: #718071;
+  margin-top: 16px;
+}
+
+
+/* =========================================================
+   MOBILE RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 600px) {
+  .buying-tabs {
+    display: flex;
+    width: 100%;
+    margin-top: 18px;
+    margin-bottom: 22px;
+  }
+
+  .buying-tab {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .retailer-my-requests,
+  .retailer-orders-section {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  /* =========================================================
+   CLEAN MY ORDERS LAYOUT
+   ========================================================= */
+
+.retailer-orders-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 22px;
+}
+
+
+/* Individual order */
+
+.retailer-order-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 180px;
+  grid-template-areas:
+    "top image"
+    "info image"
+    "action image";
+
+  column-gap: 28px;
+  row-gap: 18px;
+
+  background: #ffffff;
+  border: 1px solid #e1e9df;
+  border-radius: 18px;
+  padding: 22px 24px;
+
+  box-shadow: 0 5px 18px rgba(38, 91, 52, 0.06);
+
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+}
+
+.retailer-order-card:hover {
+  transform: translateY(-2px);
+  border-color: #c8dbc8;
+  box-shadow: 0 10px 26px rgba(38, 91, 52, 0.10);
+}
+
+
+/* Order status */
+
+.retailer-order-card-top {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.retailer-order-card-top > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.retailer-order-card-top span {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: #849184;
+}
+
+.retailer-order-card-top strong {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  gap: 7px;
+
+  padding: 6px 11px;
+  border-radius: 999px;
+
+  background: #edf7ed;
+  color: #2c7040;
+
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.retailer-order-card-top strong::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #55a363;
+}
+
+
+/* Crop / quantity / price */
+
+.retailer-order-info {
+  grid-area: info;
+
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: 0;
+
+  padding: 0;
+
+  background: transparent;
+  border: none;
+}
+
+.retailer-order-info > div {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  padding: 9px 16px;
+
+  border-right: 1px solid #e7ece5;
+}
+
+.retailer-order-info > div:first-child {
+  padding-left: 0;
+}
+
+.retailer-order-info > div:last-child {
+  border-right: none;
+}
+
+.retailer-order-info span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+
+  color: #8a9589;
+}
+
+.retailer-order-info strong {
+  font-size: 14px;
+  line-height: 1.25;
+
+  font-weight: 800;
+
+  color: #254f30;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Grain image */
+
+.retailer-order-image {
+  grid-area: image;
+
+  width: 100px;
+  height: 78px;
+
+  object-fit: cover;
+  display: block;
+
+  border-radius: 10px;
+  border: 1px solid #dce7da;
+
+  background: #f4f7f3;
+
+  justify-self: end;
+  align-self: start;
+
+  box-shadow: 0 3px 10px rgba(38, 91, 52, 0.08);
+}
+
+/* Buttons / actions */
+
+.retailer-order-card > button,
+.retailer-order-card .review-ai-button {
+  grid-area: action;
+
+  width: fit-content;
+  min-width: 145px;
+}
+
+
+
+
+/* Confirmed message */
+
+.order-confirmed-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  padding: 8px 13px;
+
+  background: #edf7ed;
+  color: #2d7440;
+
+  border: 1px solid #d4e7d3;
+  border-radius: 9px;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+
+/* Cancel button */
+
+.cancel-order-button {
+  border: 1px solid #e3b4b4;
+  outline: none;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 115px;
+  padding: 8px 14px;
+
+  margin-top: 9px;
+
+  border-radius: 9px;
+
+  background: #fff1f1;
+  color: #c03939;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.cancel-order-button:hover {
+  background: #fce0e0;
+  border-color: #d98f8f;
+  color: #a92f2f;
+
+  transform: translateY(-1px);
+}
+
+.cancel-order-button:active {
+  transform: scale(0.97);
+}
+
+/* Expired / cancelled message */
+
+.order-pending-label {
+  display: inline-flex;
+  align-items: center;
+
+  padding: 8px 12px;
+
+  background: #f5f7f4;
+  color: #718071;
+
+  border: 1px solid #e1e7df;
+  border-radius: 9px;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+}
+.retailer-orders-section {
+  position: relative;
+
+  background: linear-gradient(
+    145deg,
+    #ffffff 0%,
+    #f9fcf8 100%
+  );
+
+  border: 1px solid #e1ebe0;
+  border-radius: 20px;
+
+  padding: 28px;
+
+  margin-top: 18px;
+  margin-bottom: 30px;
+
+  box-shadow: 0 8px 26px rgba(38, 91, 52, 0.07);
+
+  overflow: hidden;
+}
+
+.retailer-orders-section::before {
+  content: "";
+
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 4px;
+
+  background: linear-gradient(
+    90deg,
+    #2f7d43,
+    #6da65d,
+    #b7c884
+  );
+}
+
+.retailer-orders-section .section-heading {
+  margin-bottom: 4px;
+}
+
+.retailer-orders-section .section-heading h2 {
+  color: #214f2d;
+  margin-bottom: 6px;
+}
+
+.retailer-orders-section .section-heading p {
+  color: #718071;
+  margin: 0;
+}
+@media (max-width: 750px) {
+  .retailer-order-card {
+    grid-template-columns: 1fr;
+
+    grid-template-areas:
+      "top"
+      "image"
+      "info"
+      "action";
+
+    padding: 18px;
+  }
+
+  .retailer-order-image {
+    width: 100%;
+    height: 190px;
+  }
+
+  .retailer-order-info {
+    grid-template-columns: 1fr;
+  }
+
+  .retailer-order-info strong {
+    white-space: normal;
+  }
+}
+.confirm-order-button {
+  border: none;
+  outline: none;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 145px;
+  padding: 10px 18px;
+
+  border-radius: 10px;
+
+  background: linear-gradient(
+    135deg,
+    #2f7d43,
+    #3f9251
+  );
+
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  box-shadow: 0 5px 12px rgba(47, 125, 67, 0.20);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.confirm-order-button:hover {
+  background: linear-gradient(
+    135deg,
+    #286d3a,
+    #378647
+  );
+
+  transform: translateY(-1px);
+
+  box-shadow: 0 8px 17px rgba(47, 125, 67, 0.25);
+}
+
+.confirm-order-button:active {
+  transform: scale(0.97);
+}
+.order-confirmed-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  padding: 7px 11px;
+
+  margin-bottom: 4px;
+
+  background: #edf7ed;
+  color: #2d7440;
+
+  border: 1px solid #d4e7d3;
+  border-radius: 9px;
+
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.retailer-order-card:hover {
+  transform: translateY(-2px);
+  border-color: #c8dbc8;
+  box-shadow: 0 9px 22px rgba(38, 91, 52, 0.09);
+}
+.confirm-order-button {
+  border: none;
+  outline: none;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 130px;
+  padding: 9px 16px;
+
+  border-radius: 9px;
+
+  background: #2f7d43;
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  box-shadow: 0 4px 10px rgba(47, 125, 67, 0.18);
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.confirm-order-button:hover {
+  background: #276b39;
+
+  transform: translateY(-1px);
+
+  box-shadow: 0 6px 14px rgba(47, 125, 67, 0.22);
+}
+
+.confirm-order-button:active {
+  transform: scale(0.97);
+}
+.order-confirmed-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  width: fit-content;
+
+  padding: 6px 10px;
+
+  margin-bottom: 2px;
+
+  background: #edf7ed;
+  color: #2d7440;
+
+  border: 1px solid #d4e7d3;
+  border-radius: 8px;
+
+  font-size: 11px;
+  font-weight: 800;
+}
+@media (max-width: 750px) {
+  .retailer-order-card {
+    grid-template-columns: 1fr;
+
+    grid-template-areas:
+      "top"
+      "image"
+      "info"
+      "action";
+
+    padding: 18px;
+  }
+
+  .retailer-order-image {
+    width: 100px;
+    height: 78px;
+
+    justify-self: start;
+  }
+
+  .retailer-order-info {
+    grid-template-columns: 1fr;
+  }
+
+  .retailer-order-info > div {
+    padding: 8px 0;
+    border-right: none;
+    border-bottom: 1px solid #e7ece5;
+  }
+
+  .retailer-order-info > div:last-child {
+    border-bottom: none;
+  }
+
+  .retailer-order-info strong {
+    white-space: normal;
+  }
+}
+/* =========================================================
+   CLEAN MY ORDERS DESIGN
+   ========================================================= */
+
+.retailer-orders-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+  width: 100%;
+}
+
+/* Individual order card */
+.retailer-order-card {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+
+  background: #ffffff;
+  border: 1px solid #e1e8e1;
+  border-radius: 16px;
+
+  padding: 18px;
+
+  box-shadow: 0 5px 18px rgba(38, 91, 52, 0.07);
+
+  overflow: hidden;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.retailer-order-card:hover {
+  transform: translateY(-2px);
+  border-color: #cbdcc9;
+  box-shadow: 0 9px 24px rgba(38, 91, 52, 0.11);
+}
+
+
+/* =========================================================
+   ORDER STATUS
+   ========================================================= */
+
+.retailer-order-card-top {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+
+  border-bottom: 1px solid #edf1ec;
+}
+
+.retailer-order-card-top span {
+  display: block;
+
+  margin-bottom: 6px;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+
+  color: #8a9589;
+}
+
+.retailer-order-card-top strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  color: #356d42;
+}
+
+.retailer-order-card-top strong::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+  background: #5b9b68;
+
+  flex-shrink: 0;
+}
+
+
+/* =========================================================
+   CROP / QUANTITY / PRICE DETAILS
+   ========================================================= */
+
+.retailer-order-info {
+  width: 100%;
+  min-width: 0;
+
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  margin: 0 0 16px 0;
+  padding: 0;
+
+  background: transparent;
+  border: none;
+}
+
+.retailer-order-info > div {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  padding: 4px 12px;
+
+  border-right: 1px solid #e8eee7;
+}
+
+.retailer-order-info > div:first-child {
+  padding-left: 0;
+}
+
+.retailer-order-info > div:last-child {
+  padding-right: 0;
+  border-right: none;
+}
+
+.retailer-order-info span {
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+
+  color: #8c968b;
+}
+
+.retailer-order-info strong {
+  display: block;
+
+  min-width: 0;
+
+  font-size: 14px;
+  line-height: 1.3;
+  font-weight: 800;
+
+  color: #294f32;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   GRAIN IMAGE
+   ========================================================= */
+
+.retailer-order-image {
+  display: block;
+
+  width: 125px;
+  height: 82px;
+
+  max-width: 100%;
+
+  object-fit: cover;
+
+  margin: 2px auto 16px auto;
+
+  border-radius: 10px;
+  border: 1px solid #dce6da;
+
+  background: #f4f7f3;
+
+  box-shadow: 0 3px 10px rgba(38, 91, 52, 0.08);
+
+  flex-shrink: 0;
+}
+
+
+/* =========================================================
+   VIEW ORDER BUTTON
+   ========================================================= */
+
+.retailer-order-card > .review-ai-button {
+  width: 100%;
+
+  min-height: 38px;
+
+  margin-top: auto;
+
+  border: 1px solid #cfe0d0;
+  border-radius: 9px;
+
+  background: #f3f8f3;
+  color: #2e7040;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.retailer-order-card > .review-ai-button:hover {
+  background: #e7f2e7;
+  border-color: #b9d2ba;
+
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   CONFIRMED ORDER AREA
+   ========================================================= */
+
+.order-confirmed-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  width: fit-content;
+
+  padding: 6px 10px;
+  margin: 0 0 9px 0;
+
+  background: #edf7ed;
+  color: #2d7440;
+
+  border: 1px solid #d4e7d3;
+  border-radius: 8px;
+
+  font-size: 11px;
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   CANCEL ORDER BUTTON
+   ========================================================= */
+
+.cancel-order-button {
+  width: 100%;
+  min-height: 36px;
+
+  margin-top: 2px;
+
+  border: 1px solid #e3b4b4;
+  border-radius: 9px;
+
+  background: #fff1f1;
+  color: #c03939;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.cancel-order-button:hover {
+  background: #fce0e0;
+  border-color: #d98f8f;
+  color: #a92f2f;
+
+  transform: translateY(-1px);
+}
+
+.cancel-order-button:active {
+  transform: scale(0.98);
+}
+
+
+/* =========================================================
+   EXPIRED / CANCELLED MESSAGE
+   ========================================================= */
+
+.order-pending-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 9px 10px;
+
+  margin-top: 2px;
+
+  border-radius: 8px;
+
+  background: #f5f6f5;
+  border: 1px solid #e2e6e1;
+
+  color: #737b73;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   MOBILE / SMALL SCREEN
+   ========================================================= */
+
+@media (max-width: 1050px) {
+  .retailer-orders-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+@media (max-width: 700px) {
+  .retailer-orders-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .retailer-order-card {
+    padding: 16px;
+  }
+
+  .retailer-order-info {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .retailer-order-info > div {
+    padding: 4px 8px;
+  }
+
+  .retailer-order-info strong {
+    font-size: 13px;
+  }
+
+  .retailer-order-image {
+    width: 120px;
+    height: 80px;
+  }
+}
+/* =========================================================
+   ORDER NOTIFICATION BUTTON
+   ========================================================= */
+
+.enable-order-notifications {
+  margin-top: 14px;
+
+  border: 1px solid #cfe0d0;
+  background: #f3f8f3;
+  color: #2e7040;
+
+  padding: 9px 15px;
+
+  border-radius: 9px;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.enable-order-notifications:hover {
+  background: #e7f2e7;
+  border-color: #b9d2ba;
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   CONFIRMED ORDER AREA
+   ========================================================= */
+
+.confirmed-order-area {
+  width: 100%;
+  margin-top: auto;
+
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* =========================================================
+   CANCELLATION TIMER
+   ========================================================= */
+
+.cancellation-timer {
+  width: 100%;
+  box-sizing: border-box;
+
+  margin: 8px 0 10px 0;
+  padding: 10px 12px;
+
+  border: 1px solid #e6e9e4;
+  border-radius: 10px;
+
+  background: #fafcf9;
+
+  text-align: center;
+}
+
+.timer-label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+
+  color: #899389;
+}
+
+.timer-value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+}
+
+.timer-value > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  min-width: 34px;
+}
+
+.timer-value strong {
+  font-size: 17px;
+  line-height: 1;
+
+  font-weight: 800;
+
+  color: #2f633b;
+}
+
+.timer-value small {
+  margin-top: 4px;
+
+  font-size: 7px;
+  font-weight: 800;
+
+  letter-spacing: 0.4px;
+
+  color: #8a9589;
+}
+
+.timer-value > span {
+  font-size: 15px;
+  font-weight: 800;
+
+  color: #9aa39a;
+
+  margin-top: -8px;
+}
+
+
+/* =========================================================
+   EXPIRED TIMER
+   ========================================================= */
+
+.cancellation-expired {
+  width: 100%;
+  box-sizing: border-box;
+
+  margin: 8px 0 10px 0;
+  padding: 9px 10px;
+
+  text-align: center;
+
+  border-radius: 9px;
+
+  background: #f5f5f5;
+  border: 1px solid #e1e3e0;
+
+  color: #777d77;
+
+  font-size: 11px;
+  font-weight: 700;
+}

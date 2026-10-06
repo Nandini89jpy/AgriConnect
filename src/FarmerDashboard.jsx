@@ -1,4 +1,6 @@
+import { supabase } from "./lib/supabaseClient";
 import GrainGuardian from "./GrainGuardian";
+import GrainInspection  from "./grainInspection";
 import { ShieldCheck,AlertTriangle,CheckCircle2,Wheat,Lightbulb,RefreshCw} from "lucide-react";
 import { useMemo, useState } from "react";
 import {
@@ -40,6 +42,8 @@ function FarmerDashboard({
   const [notice, setNotice] = useState("");
   const [activeDemandTab, setActiveDemandTab] = useState("requests");
   const [showGrainGuardian, setShowGrainGuardian] = useState(false);
+  const [showGrainInspection, setShowGrainInspection] = useState(false);
+const [selectedInspectionRequest, setSelectedInspectionRequest] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
 const [selectedLanguage, setSelectedLanguage] = useState(
   () => localStorage.getItem("agriconnect-language") || "hi"
@@ -420,12 +424,10 @@ const retailerRequirements = requests.filter(
 
                   <button
                     className="demand-accept-btn"
-                    onClick={() =>
-                      onRequestStatusChange(
-                        item.id,
-                        "accepted"
-                      )
-                    }
+                    onClick={() => {
+  setSelectedInspectionRequest(item);
+  setShowGrainInspection(true);
+}}
                   >
                     <Check size={17} />
                     <span>Accept Request</span>
@@ -876,6 +878,104 @@ const retailerRequirements = requests.filter(
     </div>
   </div>
    )}
+   {showGrainInspection && (
+  <GrainInspection
+    request={selectedInspectionRequest}
+    onClose={() => {
+      setShowGrainInspection(false);
+      setSelectedInspectionRequest(null);
+    }}
+   onImageReady={async (image) => {
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      alert("Your login session has expired. Please log in again.");
+      return;
+    }
+
+    if (!image) {
+      alert("Please upload a grain image first.");
+      return;
+    }
+
+    // Create a unique file name
+    const fileExtension = image.name.split(".").pop();
+    const fileName = `${user.id}/${Date.now()}-${crypto.randomUUID()}.${fileExtension}`;
+
+    // Upload image to Supabase Storage
+    const { error: uploadError } = await supabase.storage
+      .from("grain-images")
+      .upload(fileName, image, {
+        contentType: image.type,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error("Grain image upload error:", uploadError);
+      alert("Could not upload the grain image. Please try again.");
+      return;
+    }
+
+    // Create the order
+    const { data: order, error: orderError } = await supabase
+      .from("orders")
+      .insert({
+        purchase_request_id: selectedInspectionRequest.id,
+        retailer_id: selectedInspectionRequest.retailerId,
+        farmer_id: user.id,
+        crop_id: selectedInspectionRequest.cropId || null,
+        status: "inspection_pending",
+        grain_image_url: fileName,
+      })
+      .select()
+      .single();
+
+    if (orderError) {
+      console.error("Order creation error:", orderError);
+
+      // Remove uploaded image if order creation failed
+      await supabase.storage
+        .from("grain-images")
+        .remove([fileName]);
+
+      alert("The image was uploaded, but the order could not be created.");
+      return;
+    }
+
+    console.log("Order created:", order);
+    const { error: requestStatusError } = await supabase
+  .from("purchase_requests")
+  .update({
+    status: "accepted",
+  })
+  .eq("id", selectedInspectionRequest.id);
+
+if (requestStatusError) {
+  console.error(
+    "Could not update purchase request status:",
+    requestStatusError
+  );
+}
+
+    setShowGrainInspection(false);
+    setSelectedInspectionRequest(null);
+
+    alert(
+      "✅ Your grain has been submitted for AI analysis successfully."
+    );
+  } catch (error) {
+    console.error("Unexpected grain submission error:", error);
+
+    alert(
+      "Something went wrong while submitting the grain for analysis."
+    );
+  }
+}}
+  />
+)}
 
 </div>
 

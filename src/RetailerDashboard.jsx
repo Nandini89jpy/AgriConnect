@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState , useEffect , useRef} from "react";
 import {
   ArrowLeft,
   Search,
@@ -44,6 +44,14 @@ function RetailerDashboard({
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [showSettings, setShowSettings] = useState(false);
+  const [orders, setOrders] = useState([]);
+const [selectedOrder, setSelectedOrder] = useState(null);
+const [showOrderDetails, setShowOrderDetails] = useState(false);
+const [currentTime, setCurrentTime] = useState(Date.now());
+const notifiedOrdersRef = useRef(new Set());
+const [activeBuyingTab, setActiveBuyingTab] = useState(
+  "requirements"
+);
 
 const [selectedLanguage, setSelectedLanguage] = useState(
   () => localStorage.getItem("agriconnect-language") || "hi"
@@ -52,6 +60,11 @@ const [selectedLanguage, setSelectedLanguage] = useState(
 const [profile, setProfile] = useState(() => {
   const saved = localStorage.getItem("agriconnect-retailer-profile");
 
+
+ 
+
+  
+ 
   return saved
     ? JSON.parse(saved)
     : {
@@ -64,6 +77,100 @@ const [profile, setProfile] = useState(() => {
         businessType: "Grocery Store",
       };
 });
+const getRemainingTime = (deadline) => {
+  if (!deadline) {
+    return null;
+  }
+   const difference =
+    new Date(deadline).getTime() - currentTime;
+
+  if (difference <= 0) {
+    return {
+      expired: true,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+    };
+  }
+
+  const totalSeconds = Math.floor(difference / 1000);
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return {
+    expired: false,
+    hours,
+    minutes,
+    seconds,
+  };
+};
+ useEffect(() => {
+  const timer = setInterval(() => {
+    setCurrentTime(Date.now());
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, []);
+useEffect(() => {
+  if (!orders.length) return;
+
+  orders.forEach((order) => {
+    if (
+      order.status !== "confirmed" ||
+      !order.cancellation_deadline
+    ) {
+      return;
+    }
+
+    const deadline = new Date(
+      order.cancellation_deadline
+    ).getTime();
+
+    if (
+      currentTime >= deadline &&
+      !notifiedOrdersRef.current.has(order.id)
+    ) {
+      notifiedOrdersRef.current.add(order.id);
+
+      if (
+        "Notification" in window &&
+        Notification.permission === "granted"
+      ) {
+        new Notification("AgriConnect – Cancellation Window Expired", {
+          body: "The 24-hour cancellation period for your order has expired.",
+        });
+      }
+    }
+  });
+}, [currentTime, orders]);
+const enableOrderNotifications = async () => {
+  if (!("Notification" in window)) {
+    alert("Browser notifications are not supported on this device.");
+    return;
+  }
+
+  const permission = await Notification.requestPermission();
+
+  if (permission === "granted") {
+    alert("✅ Order notifications enabled.");
+  } else {
+    alert(
+      "Notifications are blocked. Please allow notifications in your browser settings."
+    );
+  }
+};
+
+
+
+
+
+
+
+
+
+
 
   const locations = useMemo(
     () => ["All Locations", ...new Set(crops.map((crop) => crop.location))],
@@ -121,7 +228,7 @@ const [profile, setProfile] = useState(() => {
 
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser()
 
   if (!user) {
     setSuccessMessage(
@@ -215,6 +322,108 @@ const totalAvailable = crops.reduce(
   (total, crop) => total + crop.quantity,
   0
 );
+useEffect(() => {
+  const loadOrders = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("orders")
+      .select(`
+        *,
+        purchase_requests (
+          requested_crop,
+          quantity,
+          target_price,
+          buyer_name,
+          location,
+          notes
+        )
+      `)
+      .eq("retailer_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error loading orders:", error);
+      return;
+    }
+
+    const ordersWithImages = await Promise.all(
+      (data || []).map(async (order) => {
+        let imageUrl = "";
+
+        if (order.grain_image_url) {
+          const { data: signedImage } =
+            await supabase.storage
+              .from("grain-images")
+              .createSignedUrl(
+                order.grain_image_url,
+                60 * 60
+              );
+
+          imageUrl = signedImage?.signedUrl || "";
+        }
+        const handleCancelOrder = async (orderId) => {
+  const confirmed = window.confirm(
+    "Are you sure you want to cancel this order?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const { data, error } = await supabase.rpc(
+    "cancel_order",
+    {
+      p_order_id: orderId,
+    }
+  );
+
+  if (error) {
+    console.error(
+      "Order cancellation error:",
+      error
+    );
+
+    alert(
+      error.message ||
+        "Could not cancel the order."
+    );
+
+    return;
+  }
+
+  setOrders((previous) =>
+    previous.map((order) =>
+      order.id === orderId
+        ? {
+            ...order,
+            ...data,
+          }
+        : order
+    )
+  );
+
+  alert("✅ Order cancelled successfully.");
+};
+
+        return {
+          ...order,
+          signedImageUrl: imageUrl,
+        };
+      })
+    );
+
+    setOrders(ordersWithImages);
+  };
+
+  loadOrders();
+}, []);
   return (
     <div className="retailer-dashboard">
       
@@ -450,10 +659,41 @@ const totalAvailable = crops.reduce(
             <div>
               <span className="retailer-eyebrow">YOUR ACTIVITY</span>
               <h2>My buying requirements</h2>
-              <p>Requirements submitted during this session.</p>
-            </div>
-          </div>
+ <p>Requirements submitted during this session.</p>
+ </div>
+ </div>
+              <div className="buying-tabs">
+  <button
+    type="button"
+    className={
+      activeBuyingTab === "requirements"
+        ? "buying-tab active"
+        : "buying-tab"
+    }
+    onClick={() =>
+      setActiveBuyingTab("requirements")
+    }
+  >
+    Requirements
+  </button>
 
+  <button
+    type="button"
+    className={
+      activeBuyingTab === "orders"
+        ? "buying-tab active"
+        : "buying-tab"
+    }
+    onClick={() =>
+      setActiveBuyingTab("orders")
+    }
+  >
+    My Orders
+  </button>
+</div>
+
+{activeBuyingTab === "requirements" && (
+  <>
           {requests.length === 0 ? (
             <div className="retailer-empty retailer-empty-small">
               <ShoppingBasket size={29} />
@@ -487,13 +727,229 @@ const totalAvailable = crops.reduce(
               ))}
             </div>
           )}
-        </section>
+          </>
+        
+)}
+  </section>
+      {/* MY ORDERS */}
+      {activeBuyingTab === "orders" &&(
+      <section className="retailer-orders-section">
+        <div className="section-heading">
+          <div>
+            <span>ORDER MANAGEMENT</span>
+            <h2>My Orders</h2>
+            <p>View orders submitted by farmers and confirm your purchases.</p>
 
-        <p className="retailer-demo-note">
-          Demo version: the listings are sample data. Requests are stored
-          temporarily in this browser session and are not sent to real farmers.
-        </p>
-      </main>
+<button
+  type="button"
+  className="enable-order-notifications"
+  onClick={enableOrderNotifications}
+>
+  🔔 Enable Order Notifications
+</button>
+          </div>
+        </div>
+
+        {orders.length === 0 ? (
+          <div className="empty-orders">
+            <p>No orders available yet.</p>
+          </div>
+        ) : (
+          <div className="retailer-orders-grid">
+            {orders.map((order) => {
+              const request = order.purchase_requests;
+
+              return (
+                <article
+                  className="retailer-order-card"
+                  key={order.id}
+                >
+                  <div className="retailer-order-card-top">
+                    <div>
+                      <span>ORDER STATUS</span>
+
+                      <strong>
+                        {order.status === "inspection_pending"
+                          ? "Pending Review"
+                          : order.status === "confirmed"
+                          ? "Confirmed"
+                          : order.status === "cancelled"
+                          ? "Cancelled"
+                          : order.status}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div className="retailer-order-info">
+                    <div>
+                      <span>Crop</span>
+                      <strong>
+                        {request?.requested_crop || "Crop"}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Quantity</span>
+                      <strong>
+                        {Number(
+                          request?.quantity || 0
+                        ).toLocaleString("en-IN")}{" "}
+                        kg
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Target Price</span>
+                      <strong>
+                        ₹
+                        {Number(
+                          request?.target_price || 0
+                        ).toLocaleString("en-IN")}
+                        /kg
+                      </strong>
+                    </div>
+                  </div>
+
+                  {order.signedImageUrl && (
+                    <img
+                      src={order.signedImageUrl}
+                      alt="Grain sample"
+                      className="retailer-order-image"
+                    />
+                  )}
+
+                  {order.status === "inspection_pending" && (
+                    <button
+                      type="button"
+                      className="review-ai-button"
+                      onClick={() => {
+                        setSelectedOrder(order);
+                        setShowOrderDetails(true);
+                      }}
+                    >
+                      View Order
+                    </button>
+                  )}
+
+                 {order.status === "confirmed" && (
+  <div className="confirmed-order-area">
+    <div className="order-confirmed-label">
+      ✓ Order confirmed
+    </div>
+
+    {(() => {
+      const remaining = getRemainingTime(
+        order.cancellation_deadline
+      );
+
+      if (!remaining || remaining.expired) {
+        return (
+          <div className="cancellation-expired">
+            Cancellation window expired
+          </div>
+        );
+      }
+
+      return (
+        <>
+          <div className="cancellation-timer">
+            <span className="timer-label">
+              Cancellation available for
+            </span>
+
+            <div className="timer-value">
+              <div>
+                <strong>
+                  {String(remaining.hours).padStart(2, "0")}
+                </strong>
+                <small>HRS</small>
+              </div>
+
+              <span>:</span>
+
+              <div>
+                <strong>
+                  {String(remaining.minutes).padStart(2, "0")}
+                </strong>
+                <small>MIN</small>
+              </div>
+
+              <span>:</span>
+
+              <div>
+                <strong>
+                  {String(remaining.seconds).padStart(2, "0")}
+                </strong>
+                <small>SEC</small>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="cancel-order-button"
+            onClick={async () => {
+              const confirmed = window.confirm(
+                "Are you sure you want to cancel this order?"
+              );
+
+              if (!confirmed) return;
+
+              const { data, error } = await supabase.rpc(
+                "cancel_order",
+                {
+                  p_order_id: order.id,
+                }
+              );
+
+              if (error) {
+                console.error(
+                  "Order cancellation error:",
+                  error
+                );
+
+                alert(
+                  error.message ||
+                    "Could not cancel the order."
+                );
+
+                return;
+              }
+
+              setOrders((previous) =>
+                previous.map((item) =>
+                  item.id === order.id
+                    ? { ...item, ...data }
+                    : item
+                )
+              );
+
+              alert("✅ Order cancelled successfully.");
+            }}
+          >
+            Cancel Order
+          </button>
+        </>
+      );
+    })()}
+  </div>
+)}
+
+                  {order.status === "cancelled" && (
+                    <div className="order-pending-label">
+                      Order cancelled
+                    </div>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+      )}
+
+    </main>
+      
 
       {showRequestForm && (
         <div
@@ -620,6 +1076,181 @@ const totalAvailable = crops.reduce(
           </section>
         </div>
       )}
+      {showOrderDetails && selectedOrder && (
+  <div
+    className="retailer-modal-backdrop"
+    onMouseDown={(event) => {
+      if (event.target === event.currentTarget) {
+        setShowOrderDetails(false);
+        setSelectedOrder(null);
+      }
+    }}
+  >
+    <section
+      className="retailer-modal"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="retailer-modal-heading">
+        <div>
+          <span>ORDER DETAILS</span>
+          <h2>Review Your Order</h2>
+          <p>
+            Check the order details before confirming your purchase.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          className="retailer-close-btn"
+          onClick={() => {
+            setShowOrderDetails(false);
+            setSelectedOrder(null);
+          }}
+          aria-label="Close order details"
+        >
+          ×
+        </button>
+      </div>
+
+      <div className="retailer-order-detail-card">
+        <div className="retailer-order-detail-row">
+          <span>Status</span>
+          <strong>
+            {selectedOrder.status === "inspection_pending"
+              ? "Pending Review"
+              : selectedOrder.status}
+          </strong>
+        </div>
+
+        <div className="retailer-order-detail-row">
+          <span>Crop</span>
+          <strong>
+            {selectedOrder.purchase_requests?.requested_crop ||
+              "Crop"}
+          </strong>
+        </div>
+
+        <div className="retailer-order-detail-row">
+          <span>Quantity</span>
+          <strong>
+            {Number(
+              selectedOrder.purchase_requests?.quantity || 0
+            ).toLocaleString("en-IN")}{" "}
+            kg
+          </strong>
+        </div>
+
+        <div className="retailer-order-detail-row">
+          <span>Target Price</span>
+          <strong>
+            ₹
+            {Number(
+              selectedOrder.purchase_requests?.target_price || 0
+            ).toLocaleString("en-IN")}
+            /kg
+          </strong>
+        </div>
+
+        <div className="retailer-order-detail-row">
+          <span>Location</span>
+          <strong>
+            {selectedOrder.purchase_requests?.location ||
+              "Not provided"}
+          </strong>
+        </div>
+
+        {selectedOrder.purchase_requests?.notes && (
+          <div className="retailer-order-detail-notes">
+            <span>Notes</span>
+            <p>
+              {selectedOrder.purchase_requests.notes}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {selectedOrder.signedImageUrl && (
+        <div className="retailer-order-detail-image">
+          <span>Grain Sample</span>
+
+          <img
+            src={selectedOrder.signedImageUrl}
+            alt="Grain sample"
+          />
+        </div>
+      )}
+
+      <div className="order-ai-skipped-note">
+        <strong>AI analysis skipped for now</strong>
+        <p>
+          The grain image has been submitted successfully.
+          AI quality analysis will be added later.
+        </p>
+      </div>
+
+      <div className="retailer-order-actions">
+        <button
+          type="button"
+          className="review-close-button"
+          onClick={() => {
+            setShowOrderDetails(false);
+            setSelectedOrder(null);
+          }}
+        >
+          Review Later
+        </button>
+
+        <button
+          type="button"
+          className="confirm-order-button"
+          onClick={async () => {
+            const { data, error } = await supabase.rpc(
+              "confirm_order",
+              {
+                p_order_id: selectedOrder.id,
+              }
+            );
+
+            if (error) {
+              console.error(
+                "Order confirmation error:",
+                error
+              );
+
+              alert(
+                error.message ||
+                  "Could not confirm the order."
+              );
+
+              return;
+            }
+
+            setOrders((previous) =>
+              previous.map((order) =>
+                order.id === selectedOrder.id
+                  ? {
+                      ...order,
+                      ...data,
+                    }
+                  : order
+              )
+            );
+
+            setShowOrderDetails(false);
+            setSelectedOrder(null);
+
+            alert(
+              "✅ Order confirmed successfully! You can cancel this order within 24 hours."
+            );
+          }}
+        >
+          Confirm Order
+        </button>
+      </div>
+    </section>
+  </div>
+)}
       
 {showSettings && (
   <div className="retailer-modal-backdrop">
