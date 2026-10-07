@@ -57,7 +57,7 @@ const handleLogout = () => {
   setLoggedInUser(null);
   setActivePage("login");
 };
-const handleProfessionSelect = async (role) => {
+const handleProfessionSelect = async (role, profileData) => {
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -67,34 +67,58 @@ const handleProfessionSelect = async (role) => {
 
   if (!session?.user) {
     alert("Your login session has expired. Please log in again.");
-    return;
+    return false;
   }
 
   const user = session.user;
 
+  const profile = {
+    id: user.id,
+    full_name: profileData.fullName,
+    role: role,
+    phone: profileData.phone || null,
+
+    village: profileData.village || null,
+    district: profileData.district || null,
+    state: profileData.state || "Haryana",
+
+    language: profileData.language || "en",
+
+    shop_name: profileData.shopName || null,
+    business_type: profileData.businessType || null,
+    shop_address: profileData.shopAddress || null,
+
+    vehicle_number: profileData.vehicleNumber || null,
+    vehicle_type: profileData.vehicleType || null,
+    service_area: profileData.serviceArea || null,
+  };
+
+  console.log("Saving profile:", profile);
+
   const { error } = await supabase
     .from("profiles")
-    .upsert(
-      {
-        id: user.id,
-        full_name: user.email,
-        role: role,
-      },
-      {
-        onConflict: "id",
-      }
-    );
+    .upsert(profile, {
+      onConflict: "id",
+    });
 
   if (error) {
     console.error("Profile save error:", error);
-    alert("Could not save your profession. Please try again.");
-    return;
+    alert("Could not save your profile. Please try again.");
+    return false;
   }
 
-  setLoggedInUser(user);
+  console.log("Profile saved successfully.");
+
+  setLoggedInUser({
+    ...user,
+    profile: profile,
+  });
+
   setActivePage(role);
+
+  return true;
 };
-  const { crops, requests, addCrop, addRequest, updateRequestStatus } = useAgriData(loggedInUser);
+  const { crops, requests, addCrop, addRequest, updateRequestStatus,respondToRequirement } = useAgriData(loggedInUser);
 
   useEffect(() => {
   window.scrollTo({
@@ -115,6 +139,7 @@ if (activePage === "profession") {
     <ProfessionSelection
       onSelect={handleProfessionSelect}
       onLogout={handleLogout}
+      phone={loggedInUser}
     />
   );
 }
@@ -128,6 +153,8 @@ if (activePage === "farmer") {
       addCrop={addCrop}
       requests={requests}
       onRequestStatusChange={updateRequestStatus}
+      onRequirementInterest={respondToRequirement}
+       language={loggedInUser?.profile?.language || "en"}
     />
   );
 }
@@ -140,6 +167,7 @@ if (activePage === "retailer") {
       crops={crops}
       requests={requests}
       addRequest={addRequest}
+      language={loggedInUser?.profile?.language || "en"}
     />
   );
 }

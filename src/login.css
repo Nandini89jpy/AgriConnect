@@ -862,3 +862,52 @@ select:disabled,
 textarea:disabled {
   cursor: not-allowed;
 }
+/* Mobile number prefix */
+
+.phone-prefix {
+  font-size: 14px;
+  font-weight: 700;
+  color: #536153;
+  padding-right: 6px;
+  border-right: 1px solid #dfe5df;
+  margin-right: 2px;
+}
+
+
+/* Change number button */
+
+.change-number-btn {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 16px;
+
+  border: 1px solid #d8e2d8;
+  border-radius: 8px;
+
+  background: #f8faf8;
+  color: #527158;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.change-number-btn:hover {
+  background: #eef5ee;
+  border-color: #b9ceb9;
+  color: #3f6445;
+}
+
+.change-number-btn:active {
+  background: #e7f0e7;
+  transform: translateY(1px);
+}
+/* Disabled login button */
+
+.login-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}

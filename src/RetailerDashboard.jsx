@@ -1,4 +1,4 @@
-
+import { t } from "./translations";
 import React, { useMemo, useState , useEffect , useRef} from "react";
 import {
   ArrowLeft,
@@ -25,6 +25,7 @@ const initialRequest = {
   cropName: "",
   quantity: "",
   targetPrice: "",
+  deadline:"",
   location: "Faridabad",
   buyerName: "",
   notes: "",
@@ -35,6 +36,8 @@ function RetailerDashboard({
     crops ,
     requests ,
     addRequest , 
+    user,
+    language="en",
  }) {
   const [search, setSearch] = useState("");
   const [locationFilter, setLocationFilter] = useState("All Locations");
@@ -53,18 +56,11 @@ const [activeBuyingTab, setActiveBuyingTab] = useState(
   "requirements"
 );
 
-const [selectedLanguage, setSelectedLanguage] = useState(
-  () => localStorage.getItem("agriconnect-language") || "hi"
-);
 
 const [profile, setProfile] = useState(() => {
   const saved = localStorage.getItem("agriconnect-retailer-profile");
-
-
- 
-
   
- 
+
   return saved
     ? JSON.parse(saved)
     : {
@@ -77,6 +73,164 @@ const [profile, setProfile] = useState(() => {
         businessType: "Grocery Store",
       };
 });
+const [selectedRequirementOffer, setSelectedRequirementOffer] =
+  useState(null);
+  
+const [showRequirementOfferReview, setShowRequirementOfferReview] =
+  useState(false);
+
+const [requirementOfferImageUrl, setRequirementOfferImageUrl] =
+  useState("");
+
+const [requirementDecisionLoading, setRequirementDecisionLoading] =
+  useState(false);
+
+const [requirementResponseOverrides, setRequirementResponseOverrides] =
+  useState({});
+ 
+
+ const openRequirementOfferReview = async (requirement) => {
+  try {
+    setSelectedRequirementOffer(requirement);
+    setRequirementOfferImageUrl("");
+
+    if (requirement.farmerGrainImageUrl) {
+      const { data, error } = await supabase.storage
+        .from("grain-images")
+        .createSignedUrl(
+          requirement.farmerGrainImageUrl,
+          60 * 60
+        );
+
+      if (error) {
+        console.error(
+          "Error creating grain image URL:",
+          error
+        );
+      } else {
+        setRequirementOfferImageUrl(
+          data?.signedUrl || ""
+        );
+      }
+    }
+
+    setShowRequirementOfferReview(true);
+  } catch (error) {
+    console.error(
+      "Unexpected offer review error:",
+      error
+    );
+
+    alert("Could not open the farmer offer.");
+  }
+};
+const rejectRequirementOffer = async () => {
+  try {
+    if (!selectedRequirementOffer) {
+      return;
+    }
+
+    setRequirementDecisionLoading(true);
+
+    const { error } = await supabase
+      .from("purchase_requests")
+      .update({
+        farmer_response_status: "rejected",
+      })
+      .eq("id", selectedRequirementOffer.id)
+      .eq("retailer_id", user.id);
+
+    if (error) {
+      console.error(
+        "Reject farmer offer error:",
+        error
+      );
+
+      alert(
+        "Could not reject the farmer offer. Please try again."
+      );
+
+      return;
+    }
+
+    setRequirementResponseOverrides((previous) => ({
+      ...previous,
+      [selectedRequirementOffer.id]: "rejected",
+    }));
+
+    setShowRequirementOfferReview(false);
+    setSelectedRequirementOffer(null);
+    setRequirementOfferImageUrl("");
+
+    alert("Farmer offer rejected.");
+  } catch (error) {
+    console.error(
+      "Unexpected reject error:",
+      error
+    );
+
+    alert("Something went wrong while rejecting the offer.");
+  } finally {
+    setRequirementDecisionLoading(false);
+  }
+};
+const confirmRequirementOffer = async () => {
+  try {
+    if (!selectedRequirementOffer) {
+      return;
+    }
+
+    setRequirementDecisionLoading(true);
+
+    const { data, error } = await supabase.rpc(
+      "confirm_requirement_offer",
+      {
+        p_request_id: selectedRequirementOffer.id,
+      }
+    );
+
+    if (error) {
+      console.error(
+        "Confirm requirement offer error:",
+        error
+      );
+
+      alert(
+        error.message ||
+          "Could not confirm this farmer offer."
+      );
+
+      return;
+    }
+
+    setRequirementResponseOverrides((previous) => ({
+      ...previous,
+      [selectedRequirementOffer.id]: "accepted",
+    }));
+
+    setShowRequirementOfferReview(false);
+    setSelectedRequirementOffer(null);
+    setRequirementOfferImageUrl("");
+
+    alert(
+      "✅ Order confirmed successfully!"
+    );
+
+    console.log("Created order:", data);
+  } catch (error) {
+    console.error(
+      "Unexpected confirmation error:",
+      error
+    );
+
+    alert(
+      "Something went wrong while confirming the order."
+    );
+  } finally {
+    setRequirementDecisionLoading(false);
+  }
+};
+
 const getRemainingTime = (deadline) => {
   if (!deadline) {
     return null;
@@ -161,17 +315,6 @@ const enableOrderNotifications = async () => {
     );
   }
 };
-
-
-
-
-
-
-
-
-
-
-
   const locations = useMemo(
     () => ["All Locations", ...new Set(crops.map((crop) => crop.location))],
     [crops]
@@ -240,22 +383,27 @@ const enableOrderNotifications = async () => {
   const cropName = request.cropName.trim();
   const quantity = Number(request.quantity);
   const targetPrice = Number(request.targetPrice);
+  const deadline = request.deadline;
 
   // Basic validation
   if (!cropName) {
-    setSuccessMessage("Please enter the crop you need.");
+    setSuccessMessage(t(language, "pleaseEnterCrop"));
     return;
   }
 
   if (quantity <= 0) {
-    setSuccessMessage("Please enter a valid quantity.");
+    setSuccessMessage(t(language, "pleaseEnterValidQuantity"));
     return;
   }
 
   if (targetPrice <= 0) {
-    setSuccessMessage("Please enter a valid target price.");
+    setSuccessMessage(t(language, "pleaseEnterValidTargetPrice"));
     return;
   }
+  if (!deadline) {
+  setSuccessMessage(t(language, "pleaseSelectDeadline"));
+  return;
+}
 
   const { data, error } = await supabase
     .from("purchase_requests")
@@ -270,6 +418,8 @@ const enableOrderNotifications = async () => {
       quantity: quantity,
 
       target_price: targetPrice,
+
+      deadline: deadline,
 
       status: "pending",
 
@@ -302,6 +452,7 @@ const enableOrderNotifications = async () => {
     cropName: data.requested_crop,
     quantity: Number(data.quantity),
     targetPrice: Number(data.target_price),
+    deadline: data.deadline || "",
     status: "Pending",
     retailerId: data.retailer_id,
     retailerName: data.buyer_name,
@@ -368,50 +519,7 @@ useEffect(() => {
 
           imageUrl = signedImage?.signedUrl || "";
         }
-        const handleCancelOrder = async (orderId) => {
-  const confirmed = window.confirm(
-    "Are you sure you want to cancel this order?"
-  );
-
-  if (!confirmed) {
-    return;
-  }
-
-  const { data, error } = await supabase.rpc(
-    "cancel_order",
-    {
-      p_order_id: orderId,
-    }
-  );
-
-  if (error) {
-    console.error(
-      "Order cancellation error:",
-      error
-    );
-
-    alert(
-      error.message ||
-        "Could not cancel the order."
-    );
-
-    return;
-  }
-
-  setOrders((previous) =>
-    previous.map((order) =>
-      order.id === orderId
-        ? {
-            ...order,
-            ...data,
-          }
-        : order
-    )
-  );
-
-  alert("✅ Order cancelled successfully.");
-};
-
+      
         return {
           ...order,
           signedImageUrl: imageUrl,
@@ -434,27 +542,19 @@ useEffect(() => {
     </span>
 
     <div className="retailer-brand-text">
-      <h2>AgriConnect</h2>
-      <span>Retailer Portal</span>
+      <h2>{t(language, "agriconnect")}</h2>
+      <span>{t(language, "retailerPortal")}</span>
     </div>
   </div>
 
   <div className="retailer-header-actions">
   <button
     type="button"
-    className="retailer-settings-btn"
-    onClick={() => setShowSettings(true)}
-  >
-    <Settings size={17} />
-    <span>Settings / सेटिंग्स</span>
-  </button>
-
-  <button
     className="retailer-logout-btn"
     onClick={onBack}
   >
     <LogOut size={17} />
-    <span>Logout</span>
+    <span>{t(language, "logout")}</span>
   </button>
 </div>
 </header>
@@ -462,11 +562,10 @@ useEffect(() => {
       <main className="retailer-main">
         <section className="retailer-welcome">
           <div>
-            <span className="retailer-eyebrow">BUY FRESH, BUY DIRECT</span>
-            <h1>Find fresh produce for your business.</h1>
+            <span className="retailer-eyebrow">{t(language, "buyFreshBuyDirect")}</span>
+            <h1>{t(language, "findFreshProduce")}</h1>
             <p>
-              Discover crops from local farmers, compare prices, and tell
-              farmers what your business needs.
+             {t(language, "discoverCrops")} Discover crops from local farmers, {t(language, "comparePrices")} {t(language, "andTellfarmers")} {t(language, "whatyourBusinessNeeds")}.
             </p>
           </div>
           <div className="retailer-welcome-icon">
@@ -493,7 +592,7 @@ useEffect(() => {
               <Package size={21} />
             </span>
             <div>
-              <p>Available listings</p>
+              <p>{t(language, "availableListings")}</p>
               <h2>{crops.length}</h2>
             </div>
           </div>
@@ -503,7 +602,7 @@ useEffect(() => {
               <Leaf size={21} />
             </span>
             <div>
-              <p>Total produce available</p>
+              <p>{t(language, "totalProduceAvailable")}</p>
               <h2>{totalAvailable.toLocaleString("en-IN")} kg</h2>
             </div>
           </div>
@@ -513,7 +612,7 @@ useEffect(() => {
               <ShoppingBasket size={21} />
             </span>
             <div>
-              <p>My requirements</p>
+              <p>{t(language, "myRequirements")}</p>
               <h2>{requests.length}</h2>
             </div>
           </div>
@@ -522,16 +621,16 @@ useEffect(() => {
         <section className="retailer-listings">
           <div className="retailer-section-heading">
             <div>
-              <span className="retailer-eyebrow">FARMER MARKETPLACE</span>
-              <h2>Available crops</h2>
-              <p>Compare local produce before placing a requirement.</p>
+              <span className="retailer-eyebrow">{t(language, "farmerMarketplace")}</span>
+              <h2>{t(language, "availableCrops")}</h2>
+              <p>{t(language, "compareLocalProduce")}</p>
             </div>
 
             <button
               className="retailer-outline-btn"
               onClick={() => openRequestForm()}
             >
-              + Post a requirement
+              {t(language, "postARequirement")}
             </button>
           </div>
 
@@ -540,7 +639,7 @@ useEffect(() => {
               <Search size={19} />
               <input
                 type="search"
-                placeholder="Search crop, farmer or location..."
+                placeholder={t(language, "searchCropFarmerLocation")}
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />
@@ -563,10 +662,10 @@ useEffect(() => {
               value={sortBy}
               onChange={(event) => setSortBy(event.target.value)}
             >
-              <option value="recommended">Recommended order</option>
-              <option value="price-low">Price: low to high</option>
-              <option value="price-high">Price: high to low</option>
-              <option value="quantity">Largest quantity</option>
+              <option value="recommended">{t(language, "recommendedOrder")}</option>
+              <option value="price-low">{t(language, "priceLowToHigh")}</option>
+              <option value="price-high">{t(language, "priceHighToLow")}</option>
+              <option value="quantity">{t(language, "largestQuantity")}</option>
             </select>
           </div>
 
@@ -584,7 +683,7 @@ useEffect(() => {
                     </span>
                     <span className="retailer-available">
                       <span />
-                      Available
+                      {t(language, "available")}
                     </span>
                   </div>
 
@@ -630,7 +729,7 @@ useEffect(() => {
                     className="retailer-primary-btn retailer-card-btn"
                     onClick={() => openRequestForm(crop)}
                   >
-                    Send buying request
+                    {t(language, "sendBuyingRequest")}
                     <Send size={16} />
                   </button>
                 </article>
@@ -639,8 +738,8 @@ useEffect(() => {
           ) : (
             <div className="retailer-empty">
               <Search size={35} />
-              <h3>No crops found</h3>
-              <p>Try another crop name or select a different location.</p>
+              <h3>{t(language, "noCropsFound")}</h3>
+              <p>{t(language, "tryAnotherCropName")}</p>
               <button
                 className="retailer-outline-btn"
                 onClick={() => {
@@ -648,7 +747,7 @@ useEffect(() => {
                   setLocationFilter("All Locations");
                 }}
               >
-                Clear filters
+                {t(language, "clearFilters")}
               </button>
             </div>
           )}
@@ -657,9 +756,9 @@ useEffect(() => {
         <section className="retailer-my-requests">
           <div className="retailer-section-heading">
             <div>
-              <span className="retailer-eyebrow">YOUR ACTIVITY</span>
-              <h2>My buying requirements</h2>
- <p>Requirements submitted during this session.</p>
+              <span className="retailer-eyebrow">{t(language, "yourActivity")}</span>
+              <h2>{t(language, "myBuyingRequirements")}</h2>
+ <p>{t(language, "requirementsSubmittedThisSession")}</p>
  </div>
  </div>
               <div className="buying-tabs">
@@ -674,7 +773,7 @@ useEffect(() => {
       setActiveBuyingTab("requirements")
     }
   >
-    Requirements
+    {t(language, "requirements")}
   </button>
 
   <button
@@ -688,7 +787,7 @@ useEffect(() => {
       setActiveBuyingTab("orders")
     }
   >
-    My Orders
+    {t(language, "myOrders")}
   </button>
 </div>
 
@@ -697,7 +796,7 @@ useEffect(() => {
           {requests.length === 0 ? (
             <div className="retailer-empty retailer-empty-small">
               <ShoppingBasket size={29} />
-              <p>You haven't submitted any requirements yet.</p>
+              <p>{t(language, "noRequirementsSubmitted")}</p>
             </div>
           ) : (
             <div className="retailer-request-list">
@@ -713,16 +812,47 @@ useEffect(() => {
                     </div>
                   </div>
                   <div>
-                    <small>Quantity needed</small>
+                    <small>{t(language, "quantityNeeded")}</small>
                     <strong>{item.quantity} kg</strong>
                   </div>
                   <div>
-                    <small>Target price</small>
+                    <small>{t(language, "targetPrice")}</small>
                     <strong>₹{item.targetPrice}/kg</strong>
                   </div>
+                  <div>
+  <small>{t(language, "deadline")}</small>
+  <strong>
+    {item.deadline
+      ? new Date(item.deadline).toLocaleDateString("en-IN")
+      : "Not specified"}
+  </strong>
+</div>
                   <span className="retailer-request-status">
                     {item.status}
                   </span>
+                  {(
+  requirementResponseOverrides[item.id] ??
+  item.farmerResponseStatus
+) === "submitted" && (
+  <div className="farmer-offer-alert">
+    <div>
+      <strong>🌾 {t(language, "farmerOfferReceived")}</strong>
+      <p>
+        {t(language, "farmerHasSubmittedOffer")}
+      </p>
+    </div>
+
+    <button
+      type="button"
+      className="demand-accept-btn"
+      onClick={() => openRequirementOfferReview(item)}
+    >
+      {t(language, "viewFarmerOffer")}
+    </button>
+  </div>
+)}
+
+
                 </div>
               ))}
             </div>
@@ -736,16 +866,16 @@ useEffect(() => {
       <section className="retailer-orders-section">
         <div className="section-heading">
           <div>
-            <span>ORDER MANAGEMENT</span>
-            <h2>My Orders</h2>
-            <p>View orders submitted by farmers and confirm your purchases.</p>
+            <span>{t(language, "orderManagement")}</span>
+            <h2>{t(language, "myOrders")}</h2>
+            <p>{t(language, "viewOrdersSubmittedByFarmers")}</p>
 
 <button
   type="button"
   className="enable-order-notifications"
   onClick={enableOrderNotifications}
 >
-  🔔 Enable Order Notifications
+  🔔 {t(language, "enableOrderNotifications")}
 </button>
           </div>
         </div>
@@ -789,7 +919,7 @@ useEffect(() => {
                     </div>
 
                     <div>
-                      <span>Quantity</span>
+                      <span>{t(language, "quantity")}</span>
                       <strong>
                         {Number(
                           request?.quantity || 0
@@ -799,7 +929,7 @@ useEffect(() => {
                     </div>
 
                     <div>
-                      <span>Target Price</span>
+                      <span>{t(language, "targetPrice")}</span>
                       <strong>
                         ₹
                         {Number(
@@ -827,14 +957,14 @@ useEffect(() => {
                         setShowOrderDetails(true);
                       }}
                     >
-                      View Order
+                      {t(language, "viewOrder")}
                     </button>
                   )}
 
                  {order.status === "confirmed" && (
   <div className="confirmed-order-area">
     <div className="order-confirmed-label">
-      ✓ Order confirmed
+      ✓ {t(language, "orderConfirmed")}
     </div>
 
     {(() => {
@@ -845,7 +975,7 @@ useEffect(() => {
       if (!remaining || remaining.expired) {
         return (
           <div className="cancellation-expired">
-            Cancellation window expired
+            {t(language, "cancellationWindowExpired")}
           </div>
         );
       }
@@ -854,7 +984,7 @@ useEffect(() => {
         <>
           <div className="cancellation-timer">
             <span className="timer-label">
-              Cancellation available for
+              {t(language, "cancellationAvailableFor")}
             </span>
 
             <div className="timer-value">
@@ -927,7 +1057,7 @@ useEffect(() => {
               alert("✅ Order cancelled successfully.");
             }}
           >
-            Cancel Order
+            {t(language, "cancelOrder")}
           </button>
         </>
       );
@@ -968,8 +1098,8 @@ useEffect(() => {
           >
             <div className="retailer-modal-heading">
               <div>
-                <span className="retailer-eyebrow">BUYER REQUIREMENT</span>
-                <h2 id="retailer-modal-title">What do you need?</h2>
+                <span className="retailer-eyebrow">{t(language, "buyerRequirement")}</span>
+                <h2 id="retailer-modal-title">{t(language,"Whatdoyouneed?")}</h2>
                 <p>Tell farmers what quantity your business requires.</p>
               </div>
               <button
@@ -1033,6 +1163,17 @@ useEffect(() => {
                   />
                 </label>
               </div>
+              <label>
+  Requirement deadline
+  <input
+    type="date"
+    name="deadline"
+    value={request.deadline}
+    onChange={updateRequest}
+    min={new Date().toISOString().split("T")[0]}
+    required
+  />
+</label>
 
               <label>
                 Delivery location
@@ -1093,10 +1234,10 @@ useEffect(() => {
     >
       <div className="retailer-modal-heading">
         <div>
-          <span>ORDER DETAILS</span>
-          <h2>Review Your Order</h2>
+          <span>{t(language, "orderDetails")}</span>
+          <h2>{t(language, "reviewYourOrder")}</h2>
           <p>
-            Check the order details before confirming your purchase.
+            {t(language, "checkOrderDetailsBeforeConfirming")}
           </p>
         </div>
 
@@ -1115,16 +1256,16 @@ useEffect(() => {
 
       <div className="retailer-order-detail-card">
         <div className="retailer-order-detail-row">
-          <span>Status</span>
+          <span>{t(language, "status")}</span>
           <strong>
             {selectedOrder.status === "inspection_pending"
-              ? "Pending Review"
+              ? t(language, "pendingReview")
               : selectedOrder.status}
           </strong>
         </div>
 
         <div className="retailer-order-detail-row">
-          <span>Crop</span>
+          <span>{t(language, "crop")}</span>
           <strong>
             {selectedOrder.purchase_requests?.requested_crop ||
               "Crop"}
@@ -1132,7 +1273,7 @@ useEffect(() => {
         </div>
 
         <div className="retailer-order-detail-row">
-          <span>Quantity</span>
+          <span>{t(language, "quantity")}</span>
           <strong>
             {Number(
               selectedOrder.purchase_requests?.quantity || 0
@@ -1142,7 +1283,7 @@ useEffect(() => {
         </div>
 
         <div className="retailer-order-detail-row">
-          <span>Target Price</span>
+          <span>{t(language, "targetPrice")}</span>
           <strong>
             ₹
             {Number(
@@ -1153,7 +1294,7 @@ useEffect(() => {
         </div>
 
         <div className="retailer-order-detail-row">
-          <span>Location</span>
+          <span>{t(language, "location")}</span>
           <strong>
             {selectedOrder.purchase_requests?.location ||
               "Not provided"}
@@ -1162,7 +1303,7 @@ useEffect(() => {
 
         {selectedOrder.purchase_requests?.notes && (
           <div className="retailer-order-detail-notes">
-            <span>Notes</span>
+            <span>{t(language, "notes")}</span>
             <p>
               {selectedOrder.purchase_requests.notes}
             </p>
@@ -1172,7 +1313,7 @@ useEffect(() => {
 
       {selectedOrder.signedImageUrl && (
         <div className="retailer-order-detail-image">
-          <span>Grain Sample</span>
+          <span>{t(language, "grainSample")}</span>
 
           <img
             src={selectedOrder.signedImageUrl}
@@ -1182,10 +1323,10 @@ useEffect(() => {
       )}
 
       <div className="order-ai-skipped-note">
-        <strong>AI analysis skipped for now</strong>
+        <strong>{t(language, "aiAnalysisSkipped")}</strong>
         <p>
-          The grain image has been submitted successfully.
-          AI quality analysis will be added later.
+          {t(language, "grainImageSubmitted")}
+          {t(language, "aiQualityAnalysisLater")}
         </p>
       </div>
 
@@ -1431,6 +1572,296 @@ useEffect(() => {
     </section>
   </div>
 )}
+{showRequirementOfferReview &&
+  selectedRequirementOffer && (
+    <div
+      className="farmer-offer-overlay"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          setShowRequirementOfferReview(false);
+          setSelectedRequirementOffer(null);
+          setRequirementOfferImageUrl("");
+        }
+      }}
+    >
+      <section
+        className="farmer-offer-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="farmer-offer-title"
+      >
+        {/* HEADER */}
+        <div className="farmer-offer-modal-header">
+          <div className="farmer-offer-title-area">
+            <div className="farmer-offer-title-icon">
+              🌾
+            </div>
+
+            <div>
+              <span className="farmer-offer-eyebrow">
+               {t(language, "farmerResponse")}
+              </span>
+
+              <h2 id="farmer-offer-title">
+                {t(language, "farmerOffer")}
+              </h2>
+
+              <p>
+                {t(language, "reviewFarmersOffer")}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="farmer-offer-close"
+            onClick={() => {
+              setShowRequirementOfferReview(false);
+              setSelectedRequirementOffer(null);
+              setRequirementOfferImageUrl("");
+            }}
+            aria-label="Close farmer offer"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* CROP SUMMARY */}
+        <div className="farmer-offer-crop-banner">
+          <div>
+            <span>{t(language, "cropRequested")}</span>
+            <strong>
+              {selectedRequirementOffer.cropName || "Crop"}
+            </strong>
+          </div>
+
+          <div className="farmer-offer-location">
+            <MapPin size={16} />
+            <span>
+              {selectedRequirementOffer.location ||
+                "Location not provided"}
+            </span>
+          </div>
+        </div>
+
+        {/* GRAIN PHOTO */}
+        <div className="farmer-offer-photo-section">
+          <div className="farmer-offer-section-heading">
+            <div>
+              <span>{t(language, "grainSample")}</span>
+              <h3>{t(language, "farmersGrainPhoto")}</h3>
+            </div>
+          </div>
+
+          {requirementOfferImageUrl ? (
+            <div className="farmer-offer-photo-container">
+              <img
+                src={requirementOfferImageUrl}
+                alt={t(language, "farmersGrainPhoto")}
+                className="farmer-offer-grain-image"
+              />
+            </div>
+          ) : (
+            <div className="farmer-offer-no-photo">
+              <Leaf size={32} />
+              <span>{t(language, "noGrainPhoto")}</span>
+            </div>
+          )}
+        </div>
+
+        {/* FARMER OFFER */}
+        <div className="farmer-offer-section">
+          <div className="farmer-offer-section-heading">
+            <div>
+              <span>{t(language, "farmersOffer")}</span>
+              <h3>{t(language, "whatFarmerIsOffering")}</h3>
+            </div>
+
+            <span className="farmer-offer-status-badge">
+              {t(language, "offerReceived")}
+            </span>
+          </div>
+
+          <div className="farmer-offer-details-grid">
+            <div className="farmer-offer-detail-card">
+              <div className="farmer-offer-detail-icon">
+                <Package size={19} />
+              </div>
+
+              <div>
+                <span>{t(language, "availableQuantity")}</span>
+                <strong>
+                  {selectedRequirementOffer.farmerQuantity
+                    ? `${selectedRequirementOffer.farmerQuantity} kg`
+                    : "Not specified"}
+                </strong>
+              </div>
+            </div>
+
+            <div className="farmer-offer-detail-card">
+              <div className="farmer-offer-detail-icon">
+                <IndianRupee size={19} />
+              </div>
+
+              <div>
+                <span>{t(language, "farmerPrice")}</span>
+                <strong>
+                  {selectedRequirementOffer.farmerPrice
+                    ? `₹${selectedRequirementOffer.farmerPrice}/kg`
+                    : "Not specified"}
+                </strong>
+              </div>
+            </div>
+
+            <div className="farmer-offer-detail-card">
+              <div className="farmer-offer-detail-icon">
+                <Clock size={19} />
+              </div>
+
+              <div>
+                <span>{t(language, "availableUntil")}</span>
+                <strong>
+                  {selectedRequirementOffer.farmerDeadline
+                    ? new Date(
+                        selectedRequirementOffer.farmerDeadline
+                      ).toLocaleDateString("en-IN")
+                    : "Not specified"}
+                </strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* REQUIREMENT COMPARISON */}
+        <div className="farmer-offer-section">
+          <div className="farmer-offer-section-heading">
+            <div>
+              <span>{t(language, "yourRequirement")}</span>
+              <h3>{t(language, "compareWithYourRequest")}</h3>
+            </div>
+          </div>
+
+          <div className="farmer-offer-comparison">
+            <div className="comparison-row comparison-header">
+              <span>{t(language, "details")}</span>
+              <span>{t(language, "yourRequirement")}</span>
+              <span>{t(language, "farmerOffer")}</span>
+            </div>
+
+            <div className="comparison-row">
+              <span>{t(language, "quantity")}</span>
+
+              <strong>
+                {selectedRequirementOffer.quantity || 0} kg
+              </strong>
+
+              <strong>
+                {selectedRequirementOffer.farmerQuantity || 0} kg
+              </strong>
+            </div>
+
+            <div className="comparison-row">
+              <span>Price</span>
+
+              <strong>
+                ₹{selectedRequirementOffer.targetPrice || 0}/kg
+              </strong>
+
+              <strong className="farmer-price-highlight">
+                ₹{selectedRequirementOffer.farmerPrice || 0}/kg
+              </strong>
+            </div>
+
+            <div className="comparison-row">
+              <span>{t(language, "deadline")}</span>
+
+              <strong>
+                {selectedRequirementOffer.deadline
+                  ? new Date(
+                      selectedRequirementOffer.deadline
+                    ).toLocaleDateString("en-IN")
+                  : "Not specified"}
+              </strong>
+
+              <strong>
+                {selectedRequirementOffer.farmerDeadline
+                  ? new Date(
+                      selectedRequirementOffer.farmerDeadline
+                    ).toLocaleDateString("en-IN")
+                  : "Not specified"}
+              </strong>
+            </div>
+          </div>
+        </div>
+
+        {/* NOTES */}
+        {selectedRequirementOffer.notes && (
+          <div className="farmer-offer-notes">
+            <div className="farmer-offer-notes-icon">
+              <Send size={16} />
+            </div>
+
+            <div>
+              <span>Farmer's Note</span>
+              <p>
+                {selectedRequirementOffer.notes}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* CONFIRMATION MESSAGE */}
+        <div className="farmer-offer-confirmation">
+          <div className="farmer-offer-confirmation-icon">
+            <CheckCircle size={22} />
+          </div>
+
+          <div>
+            <strong>
+              {t(language, "readyToConfirmOffer")}
+            </strong>
+
+            <p>
+              {t(language, "confirmingWillCreateOrder")}
+            </p>
+          </div>
+        </div>
+
+        {/* ACTIONS */}
+        <div className="farmer-offer-actions">
+          <button
+            type="button"
+            className="farmer-offer-reject-btn"
+            onClick={rejectRequirementOffer}
+            disabled={requirementDecisionLoading}
+          >
+            <X size={17} />
+
+            {requirementDecisionLoading
+              ? "Processing..."
+              : "Reject Offer"}
+          </button>
+
+          <button
+            type="button"
+            className="farmer-offer-confirm-btn"
+            onClick={confirmRequirementOffer}
+            disabled={requirementDecisionLoading}
+          >
+            <CheckCircle size={17} />
+
+            {requirementDecisionLoading
+              ? "Processing..."
+              : "Confirm Order"}
+          </button>
+        </div>
+
+        <p className="farmer-offer-footer-note">
+          {t(language, "footerNote")}
+        </p>
+      </section>
+    </div>
+  )}
     </div>
   );
 }

@@ -2429,3 +2429,837 @@
   font-size: 11px;
   font-weight: 700;
 }
+.farmer-offer-alert {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #d8e8d8;
+  background: #f4faf4;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.farmer-offer-alert p {
+  margin: 5px 0 0;
+  color: #666;
+}
+
+.farmer-offer-review-modal {
+  max-width: 650px;
+  width: 92%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.farmer-offer-details {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.offer-detail {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 10px 0;
+}
+
+.offer-detail span {
+  color: #666;
+}
+
+.offer-detail strong {
+  text-align: right;
+}
+
+.farmer-grain-preview {
+  margin-top: 15px;
+}
+
+.farmer-grain-preview img {
+  width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  border-radius: 12px;
+  margin-top: 10px;
+  border: 1px solid #ddd;
+}
+
+.offer-review-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.danger-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 11px 18px;
+  cursor: pointer;
+  font-weight: 600;
+  background: #ffe5e5;
+  color: #c62828;
+}
+
+.danger-btn:disabled,
+.farmer-primary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+/* =========================================================
+   FARMER OFFER REVIEW MODAL
+   ========================================================= */
+
+.farmer-offer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgba(20, 35, 24, 0.58);
+
+  backdrop-filter: blur(5px);
+
+  animation: farmerOfferOverlayIn 0.2s ease-out;
+}
+
+.farmer-offer-modal {
+  width: min(760px, 100%);
+  max-height: 92vh;
+
+  overflow-y: auto;
+
+  background: #ffffff;
+
+  border-radius: 24px;
+
+  box-shadow:
+    0 25px 70px rgba(0, 0, 0, 0.22);
+
+  padding: 0;
+
+  animation: farmerOfferModalIn 0.25s ease-out;
+}
+
+
+/* HEADER */
+
+.farmer-offer-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 26px 28px 22px;
+
+  border-bottom: 1px solid #e9eee9;
+}
+
+.farmer-offer-title-area {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.farmer-offer-title-icon {
+  width: 48px;
+  height: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 14px;
+
+  background: #edf8ed;
+
+  font-size: 25px;
+}
+
+.farmer-offer-eyebrow {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #6d8b6d;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  letter-spacing: 0.12em;
+}
+
+.farmer-offer-modal-header h2 {
+  margin: 0;
+
+  color: #1f2d22;
+
+  font-size: 25px;
+  line-height: 1.2;
+}
+
+.farmer-offer-modal-header p {
+  margin: 7px 0 0;
+
+  color: #718071;
+
+  font-size: 14px;
+}
+
+.farmer-offer-close {
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #f3f5f3;
+
+  color: #59645b;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.farmer-offer-close:hover {
+  background: #e9eeea;
+  color: #1f2d22;
+  transform: rotate(3deg);
+}
+
+
+/* CROP BANNER */
+
+.farmer-offer-crop-banner {
+  margin: 20px 28px 0;
+
+  padding: 17px 19px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  border: 1px solid #dce9dc;
+  border-radius: 15px;
+
+  background: #f6fbf6;
+}
+
+.farmer-offer-crop-banner > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.farmer-offer-crop-banner span {
+  color: #718071;
+
+  font-size: 12px;
+}
+
+.farmer-offer-crop-banner strong {
+  color: #213523;
+
+  font-size: 20px;
+}
+
+.farmer-offer-location {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+
+  color: #607060 !important;
+
+  font-size: 13px;
+}
+
+
+/* COMMON SECTION */
+
+.farmer-offer-section,
+.farmer-offer-photo-section {
+  margin: 22px 28px 0;
+}
+
+.farmer-offer-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  margin-bottom: 14px;
+}
+
+.farmer-offer-section-heading span:first-child {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #789078;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 0.12em;
+}
+
+.farmer-offer-section-heading h3 {
+  margin: 0;
+
+  color: #27372a;
+
+  font-size: 17px;
+}
+
+
+/* STATUS BADGE */
+
+.farmer-offer-status-badge {
+  padding: 6px 10px;
+
+  border-radius: 999px;
+
+  background: #e8f6e8;
+
+  color: #39723d !important;
+
+  font-size: 11px !important;
+  font-weight: 700 !important;
+
+  letter-spacing: 0 !important;
+}
+
+
+/* GRAIN PHOTO */
+
+.farmer-offer-photo-container {
+  width: 100%;
+
+  padding: 10px;
+
+  border: 1px solid #e2e8e2;
+
+  border-radius: 16px;
+
+  background: #f8faf8;
+}
+
+.farmer-offer-grain-image {
+  display: block;
+
+  width: 100%;
+
+  max-height: 310px;
+
+  object-fit: contain;
+
+  border-radius: 11px;
+}
+
+.farmer-offer-no-photo {
+  min-height: 150px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  border: 1px dashed #cfd8cf;
+
+  border-radius: 15px;
+
+  background: #f8faf8;
+
+  color: #899589;
+
+  font-size: 13px;
+}
+
+
+/* FARMER OFFER DETAILS */
+
+.farmer-offer-details-grid {
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 12px;
+}
+
+.farmer-offer-detail-card {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 11px;
+
+  min-height: 92px;
+
+  padding: 15px;
+
+  border: 1px solid #e4eae4;
+
+  border-radius: 14px;
+
+  background: #ffffff;
+}
+
+.farmer-offer-detail-icon {
+  width: 35px;
+  height: 35px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 9px;
+
+  background: #edf7ed;
+
+  color: #47754b;
+}
+
+.farmer-offer-detail-card > div:last-child {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+}
+
+.farmer-offer-detail-card span {
+  color: #788278;
+
+  font-size: 11px;
+}
+
+.farmer-offer-detail-card strong {
+  color: #27352a;
+
+  font-size: 15px;
+}
+
+
+/* COMPARISON */
+
+.farmer-offer-comparison {
+  overflow: hidden;
+
+  border: 1px solid #e1e7e1;
+
+  border-radius: 14px;
+
+  background: #ffffff;
+}
+
+.comparison-row {
+  display: grid;
+
+  grid-template-columns: 1.1fr 1fr 1fr;
+
+  align-items: center;
+
+  min-height: 51px;
+
+  border-bottom: 1px solid #edf0ed;
+}
+
+.comparison-row:last-child {
+  border-bottom: none;
+}
+
+.comparison-row > * {
+  padding: 10px 14px;
+}
+
+.comparison-row > span {
+  color: #667067;
+
+  font-size: 13px;
+}
+
+.comparison-row > strong {
+  color: #27352a;
+
+  font-size: 13px;
+
+  border-left: 1px solid #edf0ed;
+}
+
+.comparison-header {
+  background: #f5f8f5;
+}
+
+.comparison-header > span {
+  color: #526052;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.comparison-header > span:not(:first-child) {
+  color: #456d49;
+}
+
+.farmer-price-highlight {
+  color: #2e7137 !important;
+}
+
+
+/* NOTES */
+
+.farmer-offer-notes {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 11px;
+
+  margin: 22px 28px 0;
+
+  padding: 14px 16px;
+
+  border: 1px solid #e5e9e5;
+
+  border-radius: 13px;
+
+  background: #fafbfa;
+}
+
+.farmer-offer-notes-icon {
+  width: 32px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 8px;
+
+  background: #eef3ee;
+
+  color: #587058;
+}
+
+.farmer-offer-notes span {
+  display: block;
+
+  margin-bottom: 3px;
+
+  color: #6f786f;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.farmer-offer-notes p {
+  margin: 0;
+
+  color: #354035;
+
+  font-size: 13px;
+
+  line-height: 1.5;
+}
+
+
+/* CONFIRMATION */
+
+.farmer-offer-confirmation {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 12px;
+
+  margin: 24px 28px 0;
+
+  padding: 16px;
+
+  border-radius: 14px;
+
+  background: #f1f8f1;
+
+  border: 1px solid #d9e9d9;
+}
+
+.farmer-offer-confirmation-icon {
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #dff0df;
+
+  color: #3d7742;
+}
+
+.farmer-offer-confirmation strong {
+  display: block;
+
+  color: #2d4b31;
+
+  font-size: 14px;
+}
+
+.farmer-offer-confirmation p {
+  margin: 4px 0 0;
+
+  color: #657365;
+
+  font-size: 12px;
+
+  line-height: 1.5;
+}
+
+
+/* ACTIONS */
+
+.farmer-offer-actions {
+  display: flex;
+
+  justify-content: flex-end;
+
+  gap: 12px;
+
+  margin: 24px 28px 0;
+
+  padding-top: 20px;
+
+  border-top: 1px solid #e9eee9;
+}
+
+.farmer-offer-reject-btn,
+.farmer-offer-confirm-btn {
+  min-height: 44px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  padding: 0 19px;
+
+  border-radius: 10px;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.farmer-offer-reject-btn {
+  border: 1px solid #efcaca;
+
+  background: #fff6f6;
+
+  color: #c44343;
+}
+
+.farmer-offer-reject-btn:hover {
+  background: #ffeded;
+
+  transform: translateY(-1px);
+}
+
+.farmer-offer-confirm-btn {
+  border: 1px solid #3e7b45;
+
+  background: #3f8147;
+
+  color: #ffffff;
+
+  box-shadow: 0 5px 14px rgba(54, 112, 61, 0.18);
+}
+
+.farmer-offer-confirm-btn:hover {
+  background: #356e3c;
+
+  transform: translateY(-1px);
+
+  box-shadow: 0 7px 18px rgba(54, 112, 61, 0.25);
+}
+
+.farmer-offer-reject-btn:disabled,
+.farmer-offer-confirm-btn:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+
+  transform: none;
+
+  box-shadow: none;
+}
+
+
+/* FOOTER NOTE */
+
+.farmer-offer-footer-note {
+  margin: 12px 28px 25px;
+
+  text-align: center;
+
+  color: #899189;
+
+  font-size: 11px;
+
+  line-height: 1.5;
+}
+
+.farmer-offer-footer-note strong {
+  color: #617061;
+}
+
+
+/* ANIMATIONS */
+
+@keyframes farmerOfferOverlayIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes farmerOfferModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 700px) {
+  .farmer-offer-overlay {
+    padding: 12px;
+  }
+
+  .farmer-offer-modal {
+    max-height: 94vh;
+
+    border-radius: 18px;
+  }
+
+  .farmer-offer-modal-header {
+    padding: 20px;
+
+    gap: 12px;
+  }
+
+  .farmer-offer-title-icon {
+    width: 42px;
+    height: 42px;
+
+    font-size: 21px;
+  }
+
+  .farmer-offer-modal-header h2 {
+    font-size: 21px;
+  }
+
+  .farmer-offer-modal-header p {
+    font-size: 12px;
+  }
+
+  .farmer-offer-crop-banner {
+    margin: 16px 20px 0;
+
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .farmer-offer-section,
+  .farmer-offer-photo-section {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+
+  .farmer-offer-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .comparison-row {
+    grid-template-columns: 0.9fr 1fr 1fr;
+  }
+
+  .comparison-row > * {
+    padding: 9px 8px;
+
+    font-size: 11px !important;
+  }
+
+  .farmer-offer-notes,
+  .farmer-offer-confirmation {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+
+  .farmer-offer-actions {
+    margin-left: 20px;
+    margin-right: 20px;
+
+    flex-direction: column-reverse;
+  }
+
+  .farmer-offer-reject-btn,
+  .farmer-offer-confirm-btn {
+    width: 100%;
+  }
+
+  .farmer-offer-footer-note {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+}

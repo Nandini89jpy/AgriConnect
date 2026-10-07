@@ -31,6 +31,7 @@ export function useAgriData(user) {
           name: row.crop_name,
           quantity: Number(row.quantity),
           price: Number(row.price_per_unit),
+          deadline:row.deadline || "",
           transport: Number(row.transport_cost || 0),
           transportCost: Number(row.transport_cost || 0),
           location: row.location || "",
@@ -65,44 +66,59 @@ export function useAgriData(user) {
     (crop) => crop.id === row.crop_id
   );
 
-  return {
-    id: row.id,
+ return {
+  id: row.id,
+  cropId: row.crop_id,
 
-    cropId: row.crop_id,
+  cropName:
+    row.requested_crop ||
+    relatedCrop?.crop_name ||
+    "Crop requirement",
 
-    // For general requirements use requested_crop.
-    // For crop-specific requests use the farmer crop name.
-    cropName:
-      row.requested_crop ||
-      relatedCrop?.crop_name ||
-      "Crop requirement",
+  quantity: Number(row.quantity),
 
-    quantity: Number(row.quantity),
+  targetPrice: Number(row.target_price || 0),
+  deadline: row.deadline || "",
+farmerId: row.farmer_id || null,
+farmerQuantity: Number(row.farmer_quantity || 0),
+farmerPrice: Number(row.farmer_price || 0),
+farmerDeadline: row.farmer_deadline || "",
+farmerGrainImageUrl:
+  row.farmer_grain_image_url || null,
+farmerResponseStatus:
+  row.farmer_response_status || null,
 
-    targetPrice: Number(row.target_price || 0),
+  status:
+    row.status === "pending"
+      ? "Pending"
+      : row.status === "accepted"
+      ? "Accepted"
+      : row.status === "rejected"
+      ? "Rejected"
+      : row.status,
 
-    status:
-      row.status === "pending"
-        ? "Pending"
-        : row.status === "accepted"
-        ? "Accepted"
-        : row.status === "rejected"
-        ? "Rejected"
-        : row.status,
+  notes: row.notes || "",
 
-    notes: row.notes || "",
+  retailerId: row.retailer_id,
 
-    retailerId: row.retailer_id,
+  retailerName: row.buyer_name || "Retailer",
 
-    retailerName: row.buyer_name || "Retailer",
+  location:
+    row.location ||
+    relatedCrop?.location ||
+    "",
 
-    location:
-      row.location ||
-      relatedCrop?.location ||
-      "",
+  createdAt: row.created_at,
 
-    createdAt: row.created_at,
-  };
+  // New farmer-response information
+  farmerId: row.farmer_id || null,
+
+  farmerResponseStatus:
+    row.farmer_response_status || null,
+
+  farmerGrainImageUrl:
+    row.farmer_grain_image_url || null,
+};
 });
       setRequests(formattedRequests);
     };
@@ -219,11 +235,55 @@ const updateRequestStatus = async (requestId, newStatus) => {
     error: null,
   };
 };
+
+const respondToRequirement = async (requestId) => {
+  if (!user) {
+    return {
+      error: new Error("No logged-in user"),
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("purchase_requests")
+    .update({
+      farmer_id: user.id,
+      farmer_response_status: "interested",
+    })
+    .eq("id", requestId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error responding to requirement:", error);
+
+    return {
+      error,
+    };
+  }
+
+  setRequests((previous) =>
+    previous.map((request) =>
+      request.id === requestId
+        ? {
+            ...request,
+            farmerId: user.id,
+            farmerResponseStatus: "interested",
+          }
+        : request
+    )
+  );
+
+  return {
+    data,
+    error: null,
+  };
+};
   return {
     crops,
     requests,
     addCrop,
     addRequest,
     updateRequestStatus,
+    respondToRequirement,
   };
 };
