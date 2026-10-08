@@ -563,9 +563,9 @@ useEffect(() => {
         <section className="retailer-welcome">
           <div>
             <span className="retailer-eyebrow">{t(language, "buyFreshBuyDirect")}</span>
-            <h1>{t(language, "findFreshProduce")}</h1>
+            <h1>Find Fresh Produce</h1>
             <p>
-             {t(language, "discoverCrops")} Discover crops from local farmers, {t(language, "comparePrices")} {t(language, "andTellfarmers")} {t(language, "whatyourBusinessNeeds")}.
+             Discover Crops from local farmers,compare Prices and Tell farmers what your Business Needs
             </p>
           </div>
           <div className="retailer-welcome-icon">
@@ -630,7 +630,7 @@ useEffect(() => {
               className="retailer-outline-btn"
               onClick={() => openRequestForm()}
             >
-              {t(language, "postARequirement")}
+              Post a Requirement
             </button>
           </div>
 
@@ -758,7 +758,7 @@ useEffect(() => {
             <div>
               <span className="retailer-eyebrow">{t(language, "yourActivity")}</span>
               <h2>{t(language, "myBuyingRequirements")}</h2>
- <p>{t(language, "requirementsSubmittedThisSession")}</p>
+ <p>Requirements Submitted This Session</p>
  </div>
  </div>
               <div className="buying-tabs">
@@ -796,7 +796,7 @@ useEffect(() => {
           {requests.length === 0 ? (
             <div className="retailer-empty retailer-empty-small">
               <ShoppingBasket size={29} />
-              <p>{t(language, "noRequirementsSubmitted")}</p>
+              <p>NO REQUIREMENTS SUBMITTED</p>
             </div>
           ) : (
             <div className="retailer-request-list">
@@ -866,16 +866,16 @@ useEffect(() => {
       <section className="retailer-orders-section">
         <div className="section-heading">
           <div>
-            <span>{t(language, "orderManagement")}</span>
+            <span>Order Management</span>
             <h2>{t(language, "myOrders")}</h2>
-            <p>{t(language, "viewOrdersSubmittedByFarmers")}</p>
+            <p>View orders submitted by farmers</p>
 
 <button
   type="button"
   className="enable-order-notifications"
   onClick={enableOrderNotifications}
 >
-  🔔 {t(language, "enableOrderNotifications")}
+  🔔 Enable Order Notifications
 </button>
           </div>
         </div>

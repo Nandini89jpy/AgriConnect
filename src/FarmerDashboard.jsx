@@ -469,9 +469,6 @@ useEffect(() => {
               </div>
             )}
           </div>
-          <p className="demo-note">
-            {t(language, "demoNote")}
-          </p>
         </section>
        <section className="retailer-demands">
 
@@ -818,10 +815,10 @@ useEffect(() => {
         <div className="demands-empty">
           <div className="empty-icon">📨</div>
 
-          <h3>{t(language, "noPurchaseRequests")}</h3>
+          <h3>NO PURCHASE REQUESTS</h3>
 
           <p>
-            {t(language, "noPurchaseRequestsNote")}
+            No Purchase Request Note
           </p>
         </div>
 
