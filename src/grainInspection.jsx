@@ -5,7 +5,7 @@ import {
   X,
   CheckCircle2,
 } from "lucide-react";
-import "./GrainInspection.css";
+import "./grainInspection.css";
 
 function GrainInspection({
   request,
