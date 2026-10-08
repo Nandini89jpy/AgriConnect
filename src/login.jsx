@@ -6,7 +6,7 @@ import {
   ShieldCheck,
   Truck,
 } from "lucide-react";
-import "./Login.css";
+import "./login.css";
 
 function Login({ onLogin }) {
   const [phone, setPhone] = useState("");

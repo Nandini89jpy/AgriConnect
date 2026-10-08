@@ -1,7 +1,7 @@
 import { t } from "./translations";
 import { supabase } from "./lib/supabaseClient";
-import GrainGuardian from "./GrainGuardian";
-import GrainInspection  from "./GrainInspection";
+import GrainGuardian from "./GrainGuardian.jsx";
+import grainInspection  from "./grainInspection.jsx";
 import { ShieldCheck,AlertTriangle,CheckCircle2,Wheat,Lightbulb,RefreshCw} from "lucide-react";
 import { useMemo, useState , useEffect} from "react";
 import {

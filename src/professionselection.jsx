@@ -12,7 +12,7 @@ import {
   Car,
   Languages,
 } from "lucide-react";
-import "./ProfessionSelection.css";
+import "./professionselection.css";
 
 function ProfessionSelection({ onSelect, onLogout, phone }) {
   const roles = [
