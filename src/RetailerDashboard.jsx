@@ -37,6 +37,7 @@ function RetailerDashboard({
     requests ,
     addRequest , 
     user,
+    refreshRequests,
     language="en",
  }) {
   const [search, setSearch] = useState("");
@@ -413,7 +414,7 @@ const enableOrderNotifications = async () => {
       // If retailer selected a farmer's crop,
       // connect the request to that crop.
       // Otherwise this remains null for a general requirement.
-      crop_id: selectedCrop?.id || null,
+      crop_id: null,
 
       quantity: quantity,
 
@@ -459,6 +460,7 @@ const enableOrderNotifications = async () => {
     location: data.location || "",
     notes: data.notes || "",
   });
+  await refreshRequests();
 
   setShowRequestForm(false);
 
@@ -482,6 +484,8 @@ useEffect(() => {
     if (!user) {
       return;
     }
+
+
 
     const { data, error } = await supabase
       .from("orders")

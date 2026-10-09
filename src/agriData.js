@@ -61,70 +61,117 @@ export function useAgriData(user) {
 
       // Convert database request data
       // into the format used by the dashboards
-     const formattedRequests = (requestData || []).map((row) => {
+   
+const formattedRequests = (requestData || []).map((row) => {
   const relatedCrop = (cropData || []).find(
     (crop) => crop.id === row.crop_id
   );
 
- return {
-  id: row.id,
-  cropId: row.crop_id,
+  return {
+    id: row.id,
+    cropId: row.crop_id,
 
-  cropName:
-    row.requested_crop ||
-    relatedCrop?.crop_name ||
-    "Crop requirement",
+    cropName:
+      row.requested_crop ||
+      relatedCrop?.crop_name ||
+      "Crop requirement",
 
-  quantity: Number(row.quantity),
+    quantity: Number(row.quantity || 0),
+    targetPrice: Number(row.target_price || 0),
+    deadline: row.deadline || "",
 
-  targetPrice: Number(row.target_price || 0),
-  deadline: row.deadline || "",
-farmerId: row.farmer_id || null,
-farmerQuantity: Number(row.farmer_quantity || 0),
-farmerPrice: Number(row.farmer_price || 0),
-farmerDeadline: row.farmer_deadline || "",
-farmerGrainImageUrl:
-  row.farmer_grain_image_url || null,
-farmerResponseStatus:
-  row.farmer_response_status || null,
+    farmerId: row.farmer_id || null,
+    farmerQuantity: Number(row.farmer_quantity || 0),
+    farmerPrice: Number(row.farmer_price || 0),
+    farmerDeadline: row.farmer_deadline || "",
+    farmerGrainImageUrl: row.farmer_grain_image_url || null,
+    farmerResponseStatus: row.farmer_response_status || null,
 
-  status:
-    row.status === "pending"
-      ? "Pending"
-      : row.status === "accepted"
-      ? "Accepted"
-      : row.status === "rejected"
-      ? "Rejected"
-      : row.status,
+    status:
+      row.status === "pending"
+        ? "Pending"
+        : row.status === "accepted"
+        ? "Accepted"
+        : row.status === "rejected"
+        ? "Rejected"
+        : row.status,
 
-  notes: row.notes || "",
+    notes: row.notes || "",
+    retailerId: row.retailer_id,
+    retailerName: row.buyer_name || "Retailer",
 
-  retailerId: row.retailer_id,
-
-  retailerName: row.buyer_name || "Retailer",
-
-  location:
-    row.location ||
-    relatedCrop?.location ||
-    "",
-
-  createdAt: row.created_at,
-
-  // New farmer-response information
-  farmerId: row.farmer_id || null,
-
-  farmerResponseStatus:
-    row.farmer_response_status || null,
-
-  farmerGrainImageUrl:
-    row.farmer_grain_image_url || null,
-};
+    location: row.location || relatedCrop?.location || "",
+    createdAt: row.created_at,
+  };
 });
-      setRequests(formattedRequests);
-    };
+
+setRequests(formattedRequests);
+ };
 
     loadData();
   }, [user]);
+
+  
+const refreshRequests = async () => {
+  if (!user) return;
+
+  const { data, error } = await supabase
+    .from("purchase_requests")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error refreshing purchase requests:", error);
+    return;
+  }
+
+  const { data: cropData, error: cropError } = await supabase
+    .from("crops")
+    .select("*");
+
+  if (cropError) {
+    console.error("Error refreshing crops:", cropError);
+  }
+
+  const formattedRequests = (data || []).map((row) => {
+    const relatedCrop = (cropData || []).find(
+      (crop) => crop.id === row.crop_id
+    );
+
+    return {
+      id: row.id,
+      cropId: row.crop_id,
+      cropName:
+        row.requested_crop ||
+        relatedCrop?.crop_name ||
+        "Crop requirement",
+      quantity: Number(row.quantity || 0),
+      targetPrice: Number(row.target_price || 0),
+      deadline: row.deadline || "",
+      farmerId: row.farmer_id || null,
+      farmerQuantity: Number(row.farmer_quantity || 0),
+      farmerPrice: Number(row.farmer_price || 0),
+      farmerDeadline: row.farmer_deadline || "",
+      farmerGrainImageUrl: row.farmer_grain_image_url || null,
+      farmerResponseStatus: row.farmer_response_status || null,
+      status:
+        row.status === "pending"
+          ? "Pending"
+          : row.status === "accepted"
+          ? "Accepted"
+          : row.status === "rejected"
+          ? "Rejected"
+          : row.status,
+      notes: row.notes || "",
+      retailerId: row.retailer_id,
+      retailerName: row.buyer_name || "Retailer",
+      location: row.location || relatedCrop?.location || "",
+      createdAt: row.created_at,
+    };
+  });
+
+  setRequests(formattedRequests);
+};
 
   // -----------------------------
   // ADD NEW CROP
@@ -184,16 +231,10 @@ farmerResponseStatus:
   // -----------------------------
   // ADD PURCHASE REQUEST
   // -----------------------------
-  const addRequest = (request) => {
-  setRequests((previous) => [
-    {
-      ...request,
-      status: request.status || "Pending",
-    },
-    ...previous,
-  ]);
+const addRequest = async () => {
+  await refreshRequests();
 };
-
+ 
 // Update purchase request status
 const updateRequestStatus = async (requestId, newStatus) => {
   const { data, error } = await supabase
@@ -285,5 +326,6 @@ const respondToRequirement = async (requestId) => {
     addRequest,
     updateRequestStatus,
     respondToRequirement,
+    refreshRequests,
   };
 };

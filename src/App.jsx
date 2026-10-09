@@ -118,7 +118,7 @@ const handleProfessionSelect = async (role, profileData) => {
 
   return true;
 };
-  const { crops, requests, addCrop, addRequest, updateRequestStatus,respondToRequirement } = useAgriData(loggedInUser);
+  const { crops, requests, addCrop, addRequest, updateRequestStatus,respondToRequirement,refreshRequests } = useAgriData(loggedInUser);
 
   useEffect(() => {
   window.scrollTo({
@@ -167,6 +167,7 @@ if (activePage === "retailer") {
       crops={crops}
       requests={requests}
       addRequest={addRequest}
+      refreshRequests={refreshRequests}
       language={loggedInUser?.profile?.language || "en"}
     />
   );

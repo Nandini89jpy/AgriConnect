@@ -180,13 +180,15 @@ const handleNotInterested = async (requirement) => {
     ),
     [crops, search]
   );
-const retailerRequests = requests.filter(
-  (item) => item.cropId
-);
 
-const retailerRequirements = requests.filter(
+
+
+const retailerRequests= requests.filter(
   (item) => !item.cropId
 );
+
+console.log("All requests:", requests);
+console.log("Retailer-posted requirements:", retailerRequests);
 useEffect(() => {
   const loadFarmerOrders = async () => {
     try {
@@ -482,18 +484,7 @@ useEffect(() => {
     </div>
   </div>
   <div className="farmer-main-tabs">
-  <button
-    type="button"
-    className={
-      activeFarmerTab === "requests"
-        ? "farmer-main-tab active"
-        : "farmer-main-tab"
-    }
-    onClick={() => setActiveFarmerTab("requests")}
-  >
-    📨 {t(language, "requests")}
-  </button>
-
+ 
   <button
     type="button"
     className={
@@ -539,28 +530,12 @@ useEffect(() => {
       </span>
     </button>
 
-    <button
-      type="button"
-      className={`demand-tab ${
-        activeDemandTab === "requirements" ? "active" : ""
-      }`}
-      onClick={() => setActiveDemandTab("requirements")}
-    >
-      <span className="demand-tab-icon">📋</span>
-
-      <span className="demand-tab-content">
-        <strong>{t(language, "retailerRequirements")}</strong>
-        <small>
-          {retailerRequirements.length} requirements
-        </small>
-      </span>
-    </button>
-
+  
   </div>
 
 
-  {/* REQUESTS */}
-  {activeFarmerTab === "requests" && (
+  {/*  RETAILERREQUESTS */}
+  {activeFarmerTab === "requirements" && (
     <div className="demand-content">
 
       <div className="demand-section-title">
@@ -575,7 +550,7 @@ useEffect(() => {
       {retailerRequests.length > 0 ? (
         <div className="demand-grid">
 
-       {retailerRequirements.map((item) => {
+       {retailerRequests.map((item) => {
   const responseStatus =
     requirementResponseOverrides[item.id] ??
     item.farmerResponseStatus;
@@ -602,7 +577,13 @@ useEffect(() => {
       </div>
 
       <h3>
-        {item.cropName || item.name || "Crop request"}
+        <h3>
+  {item.cropName ||
+    item.requestedCrop ||
+    item.requested_crop ||
+    item.name ||
+    "Crop request"}
+</h3>
       </h3>
 
       <p className="demand-subtitle">
@@ -827,186 +808,6 @@ useEffect(() => {
     </div>
   )}
 
-
-  {/* GENERAL RETAILER REQUIREMENTS */}
-  {activeFarmerTab === "requirements" && (
-    <div className="demand-content">
-
-      <div className="demand-section-title">
-        <div>
-          <h3>{t(language, "retailerRequirements")}</h3>
-          <p>
-            {t(language, "discoverWhatRetailersAreCurrentlyLookingToBuy")}
-          </p>
-        </div>
-      </div>
-
-      {retailerRequirements.length > 0 ? (
-        <div className="demand-grid">
-
-          {retailerRequirements.map((item) => (
-            <article className="demand-card" key={item.id}>
-
-              <div className="demand-card-header">
-
-                <div className="demand-crop-icon">
-                  📋
-                </div>
-
-                <span className="demand-status">
-                  {item.status || "Pending"}
-                </span>
-
-              </div>
-
-              <h3>
-                {item.cropName || "Crop requirement"}
-              </h3>
-
-              <p className="demand-subtitle">
-                Retailer is looking for this crop
-              </p>
-
-              <div className="demand-info-grid">
-
-                <div className="demand-info">
-                  <span>{t(language, "requiredQuantity")}</span>
-
-                  <strong>
-                    {Number(item.quantity || 0).toLocaleString("en-IN")} kg
-                  </strong>
-                </div>
-
-                <div className="demand-info">
-                  <span>{t(language, "targetPrice")}</span>
-
-                  <strong>
-                    ₹{Number(item.targetPrice || 0).toLocaleString("en-IN")}
-                    <small>/kg</small>
-                  </strong>
-                </div>
-
-              </div>
-
-              <div className="demand-divider" />
-
-              <div className="demand-retailer">
-
-                <div className="retailer-avatar">
-                  {(item.retailerName || "R")
-                    .charAt(0)
-                    .toUpperCase()}
-                </div>
-
-                <div>
-                  <span>{t(language, "requirementPostedBy")}</span>
-
-                  <strong>
-                    {item.retailerName || "Retailer"}
-                  </strong>
-                </div>
-
-              </div>
-
-              <div className="demand-location">
-                <span>📍</span>
-                {item.location || "Location not specified"}
-              </div>
-             {item.farmerResponseStatus === "interested" && (
-  <div className="farmer-requirement-status interested">
-    {t(language, "youAreInterestedInThisRequirement")}
-    <br />
-    <small>{t(language, "completeYourOfferBelow")}</small>
-  </div>
-)}
-
-{item.farmerResponseStatus === "submitted" && (
-  <div className="farmer-requirement-status submitted">
-    {t(language, "offerSubmitted")}
-    <br />
-    <small>
-      {t(language, "yourGrainDetailsHaveBeenSentToTheRetailer")}
-      {t(language, "waitingForTheRetailersResponse")}
-    </small>
-  </div>
-)}
-
-{item.farmerResponseStatus === "not_interested" && (
-  <div className="farmer-requirement-status rejected">
-    {t(language, "notInterested")}
-    <br />
-    <small>
-      {t(language, "youChoseNotToRespond")}
-    </small>
-  </div>
-)}
-
-{item.farmerResponseStatus === "accepted" && (
-  <div className="farmer-requirement-status accepted">
-    {t(language, "retailerAcceptedYourOffer")}
-    <br />
-    <small>{t(language, "yourOrderHasBeenConfirmed")}</small>
-  </div>
-)}
-
-{item.farmerResponseStatus === "rejected" && (
-  <div className="farmer-requirement-status rejected">
-    ❌ {t(language, "retailerDidNotAcceptYourOffer")}
-  </div>
-)}
-
-{(!item.farmerResponseStatus ||
-  item.farmerResponseStatus === "interested") && (
-  <div className="demand-actions">
-
-    <button
-      type="button"
-      className="demand-accept-btn"
-      onClick={() => openRequirementOffer(item)}
-    >
-      <Check size={17} />
-      <span>
-        {item.farmerResponseStatus === "interested"
-          ? t(language, "completeOffer")
-          : t(language, "imInterested")}
-      </span>
-    </button>
-
-    <button
-      type="button"
-      className="demand-reject-btn"
-      onClick={() => handleNotInterested(item)}
-    >
-      <X size={17} />
-      <span>{t(language, "notInterested")}</span>
-    </button>
-
-  </div>
-)}
-
-           
-            </article>
-          ))}
-
-        </div>
-      ) : (
-
-        <div className="demands-empty">
-
-          <div className="empty-icon">📋</div>
-
-          <h3>{t(language, "noRetailerRequirements")}</h3>
-
-          <p>
-            {t(language, "newRequirementsPostedByRetailersWillAppearHere")}
-          </p>
-
-        </div>
-
-      )}
-
-    </div>
-  )}
 {activeFarmerTab === "orders" && (
   <div className="farmer-orders-content">
 
@@ -1677,7 +1478,7 @@ if (!selectedInspectionRequest.cropId) {
         purchase_request_id: selectedInspectionRequest.id,
         retailer_id: selectedInspectionRequest.retailerId,
         farmer_id: user.id,
-        crop_id: selectedInspectionRequest.cropId || null,
+        crop_id: row.crop_id,
         status: "inspection_pending",
         grain_image_url: fileName,
       })
